@@ -6,8 +6,8 @@ VENV_DIR="$PROJECT_ROOT/.venv"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 DEFAULT_PROVIDER="${1:-duckduckgo}"
 
-log() { printf "[project-evolution] %s\n" "$*"; }
-fail() { printf "[project-evolution][error] %s\n" "$*" >&2; exit 1; }
+log() { printf "[self-evolution] %s\n" "$*"; }
+fail() { printf "[self-evolution][error] %s\n" "$*" >&2; exit 1; }
 
 command -v "$PYTHON_BIN" >/dev/null 2>&1 || fail "未找到 Python，请先安装 Python 3.10+"
 

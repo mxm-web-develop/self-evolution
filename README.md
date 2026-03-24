@@ -1,8 +1,8 @@
-# Project Evolution / 项目进化助手
+# Self-Evolution / 项目进化助手
 
-> An OpenClaw-first project evolution system that helps analyze, diagnose, plan, score, approve, execute, and learn from product/project improvements.
+> An OpenClaw-first self-evolution system that helps analyze, diagnose, plan, score, approve, execute, and learn from product/project improvements.
 >
-> 一个 **OpenClaw-first** 的项目进化系统，用于帮助项目完成：**调研 → 诊断 → 方案 → 评分 → 审批 → 执行 → 学习回写** 的完整闭环。
+> 一个 **OpenClaw-first** 的项目进化（自进化）系统，用于帮助项目完成：**调研 → 诊断 → 方案 → 评分 → 审批 → 执行 → 学习回写** 的完整闭环。
 
 ---
 
@@ -10,7 +10,7 @@
 
 ### What is this?
 
-**Project Evolution** is a lightweight project optimization and self-improvement framework.
+**Self-Evolution** is a lightweight project optimization and self-improvement framework.
 
 It is designed to:
 - research a problem or opportunity
@@ -64,7 +64,7 @@ The current version is built **for OpenClaw first**, while keeping a structure t
 ### Directory Structure
 
 ```text
-project-evolution/
+self-evolution/
 ├── core/                 # generic business logic layer
 ├── adapter_openclaw/     # OpenClaw adapter layer
 ├── providers/            # search providers (Tavily / Brave / DuckDuckGo)
@@ -78,7 +78,7 @@ project-evolution/
 ### Quick Start
 
 ```bash
-cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
 chmod +x scripts/bootstrap.sh
 ./scripts/bootstrap.sh duckduckgo
 ```
@@ -92,7 +92,7 @@ This script will automatically:
 ### Manual Installation
 
 ```bash
-cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -128,7 +128,7 @@ Current repository status:
 
 - connect the orchestrator to actual OpenClaw command flows
 - improve provider reliability and fallback quality
-- make `money-machine` use Project Evolution for real optimization reports
+- make `money-machine` use Self-Evolution for real optimization reports
 - continue extracting a generic core after OpenClaw validation succeeds
 
 ---
@@ -137,7 +137,7 @@ Current repository status:
 
 ### 这是什么？
 
-**项目进化助手（Project Evolution）** 是一个轻量级的项目优化与自进化框架。
+**项目进化助手（Self-Evolution）** 是一个轻量级的项目优化与自进化框架。
 
 它用来帮助项目完成以下流程：
 - 对问题或机会进行调研
@@ -191,7 +191,7 @@ Current repository status:
 ### 目录结构
 
 ```text
-project-evolution/
+self-evolution/
 ├── core/                 # 通用业务逻辑层
 ├── adapter_openclaw/     # OpenClaw 适配层
 ├── providers/            # 搜索 Provider（Tavily / Brave / DuckDuckGo）
@@ -205,7 +205,7 @@ project-evolution/
 ### 快速开始
 
 ```bash
-cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
 chmod +x scripts/bootstrap.sh
 ./scripts/bootstrap.sh duckduckgo
 ```
@@ -219,7 +219,7 @@ chmod +x scripts/bootstrap.sh
 ### 手动安装
 
 ```bash
-cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -255,7 +255,7 @@ python scripts/verify_install.py duckduckgo
 
 - 把 orchestrator 接入真实 OpenClaw 调用链
 - 提升 provider 可靠性和 fallback 效果
-- 让 `money-machine` 真正使用 Project Evolution 生成优化报告
+- 让 `money-machine` 真正使用 Self-Evolution 生成优化报告
 - 在 OpenClaw 验证成功后，再逐步抽离通用 Core
 
 ---
@@ -267,5 +267,109 @@ GitHub: <https://github.com/mxm-web-develop/self-evolution>
 ## License / 许可
 
 Currently internal / in active development.
+
+---
+
+## 🚀 Onboarding 模块（Beta）
+
+项目初始化和接入模块，支持新项目和已有项目的快速接入。
+
+### CLI 快速使用
+
+```bash
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
+
+# 列出所有项目
+PYTHONPATH=. python3 -m src.onboarding.cli --list
+
+# 查看当前活跃项目
+PYTHONPATH=. python3 -m src.onboarding.cli --active
+
+# 初始化新项目
+PYTHONPATH=. python3 -m src.onboarding.cli --new \
+  --goal "做一个 AI 图片生成 SaaS" \
+  --name "PixGen" \
+  --benchmarks "Midjourney,Leonardo.ai" \
+  --priorities "performance:0.4,conversion:0.3" \
+  --automation-boundaries "cost_approval,external_release"
+
+# 接入已有项目
+PYTHONPATH=. python3 -m src.onboarding.cli --existing /path/to/project
+
+# 仅扫描（不写入）
+PYTHONPATH=. python3 -m src.onboarding.cli --scan /path/to/project
+
+# 切换活跃项目
+PYTHONPATH=. python3 -m src.onboarding.cli --switch pixgen
+```
+
+### Python 代码使用
+
+```python
+import sys
+sys.path.insert(0, '/path/to/self-evolution')
+
+from src.onboarding import OnboardingRouter
+
+router = OnboardingRouter('/path/to/self-evolution')
+
+# 初始化新项目
+session = router.init_new_project(
+    goal="做一个 AI 图片生成 SaaS",
+    name="PixGen",
+    benchmarks=["Midjourney", "Leonardo.ai"],
+    priorities=[
+        {"dimension": "performance", "weight": 0.4, "reason": "用户关心速度"},
+        {"dimension": "conversion", "weight": 0.3, "reason": "提升转化"},
+    ],
+    automation_boundaries=["cost_approval"],
+)
+
+# 接入已有项目
+session, scan = router.init_existing_project("/path/to/existing/project")
+
+# 列出 / 切换项目
+router.list_projects()
+router.switch_project("pixgen")
+router.get_active_project()
+```
+
+### 生成的文件
+
+每个项目在 `projects/{project-id}/` 下生成：
+
+| 文件 | 说明 |
+|---|---|
+| `profile.md` | 项目画像 |
+| `user-goals.md` | 用户目标文档 |
+| `competitor-benchmarks.md` | 竞品分析 |
+| `optimization-roadmap.md` | 优化路线图 |
+| `state.json` | 运行时状态 |
+| `config.yaml` | 项目配置 |
+| `health-report.md` | 健康度报告（仅已有项目） |
+
+### Demo 脚本
+
+```bash
+PYTHONPATH=. python3 scripts/demo_onboarding.py
+```
+
+### 当前进度
+
+✅ 已完成：
+- 项目索引管理（projects/index.json）
+- OnboardingSession / OnboardingState 数据结构
+- 新项目初始化器（完整）
+- 已有项目初始化器（扫描部分）
+- 统一入口 OnboardingRouter
+- CLI（完整）
+- Demo 脚本
+
+⏳ 本轮未完成（待后续迭代）：
+- 多轮对话真正接入 OpenClaw message 回路
+- 自然语言意图识别路由
+- 复杂项目结构深度扫描（多语言混合项目）
+- OpenClaw skill 集成（SKILL.md）
+
 
 当前处于内部开发与快速迭代阶段。

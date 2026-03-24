@@ -8,7 +8,7 @@ Adapter 必须实现这些接口
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from .models import Task, ProjectState, SearchResult
+from .models import Task, ProjectState
 
 
 class ITaskExecutor(ABC):

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-03-24T18:17:24.563951",
+  "active_project_id": "pixgen",
+  "projects": [
+    {
+      "id": "pixgen",
+      "name": "PixGen",
+      "description": "做一个 AI 图片生成的 SaaS 产品",
+      "path": "/Users/mxm_pro/.openclaw/workspace/self-evolution/projects/pixgen",
+      "type": "new",
+      "status": "active",
+      "created_at": "2026-03-24T18:14:08.194888",
+      "last_active_at": "2026-03-24T18:14:08.194888",
+      "phase": "IDLE",
+      "onboarding_completed": true
+    }
+  ]
+}

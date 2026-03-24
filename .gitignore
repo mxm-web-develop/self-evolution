@@ -4,3 +4,7 @@ __pycache__/
 .env
 *.bak
 .DS_Store
+projects/*/
+!projects/demo/
+!projects/demo/**
+!projects/index.json

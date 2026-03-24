@@ -19,7 +19,7 @@
 ### 1.2 一键安装（推荐）
 
 ```bash
-cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
 chmod +x scripts/bootstrap.sh
 ./scripts/bootstrap.sh duckduckgo
 ```
@@ -47,7 +47,7 @@ chmod +x scripts/bootstrap.sh
 如果你想单独验证，而不是在安装脚本里自动验证，可执行：
 
 ```bash
-cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
 source .venv/bin/activate
 python scripts/verify_install.py duckduckgo
 ```
@@ -145,7 +145,7 @@ AI 学习回写（自动）
 在 OpenClaw 对话中输入：
 
 ```
-/evolution 新建项目：优化网站加载速度，当前首屏加载需要 5 秒，希望控制在 2 秒内
+/evolve 新建项目：优化网站加载速度，当前首屏加载需要 5 秒，希望控制在 2 秒内
 ```
 
 系统将自动开始调研流程，并在每个阶段汇报进度。
@@ -153,7 +153,7 @@ AI 学习回写（自动）
 ### 3.3 查看项目状态
 
 ```
-/evolution status demo
+/evolve status demo
 ```
 
 返回当前项目所在阶段、已完成的历史记录。
@@ -187,7 +187,7 @@ AI 学习回写（自动）
 流程可随时中断（关闭对话、停止进程），重启后输入：
 
 ```
-/evolution resume demo
+/evolve resume demo
 ```
 
 系统从上次保存的 Phase 继续执行。
@@ -286,13 +286,13 @@ execution:
 
 | 命令 | 说明 |
 |---|---|
-| `/evolution new [问题]` | 新建项目，开始调研 |
-| `/evolution status [project-id]` | 查看项目当前状态 |
-| `/evolution plans [project-id]` | 查看所有候选方案 |
-| `/evolution approve [project-id]` | 批准最优方案 |
-| `/evolution reject [project-id]` | 拒绝，重新生成 |
-| `/evolution resume [project-id]` | 从上次断点继续 |
-| `/evolution cases` | 查看案例库统计 |
+| `/evolve new [问题]` | 新建项目，开始调研 |
+| `/evolve status [project-id]` | 查看项目当前状态 |
+| `/evolve plans [project-id]` | 查看所有候选方案 |
+| `/evolve approve [project-id]` | 批准最优方案 |
+| `/evolve reject [project-id]` | 拒绝，重新生成 |
+| `/evolve resume [project-id]` | 从上次断点继续 |
+| `/evolve cases` | 查看案例库统计 |
 
 ### 6.2 状态阶段说明
 
@@ -326,7 +326,7 @@ execution:
 ### 8.1 升级项目进化助手
 
 ```bash
-cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
 git pull  # 或重新部署代码
 
 # 重启 OpenClaw（如需要）
@@ -352,4 +352,4 @@ export TAVILY_API_KEY=tvly-xxxxx
 
 - 项目代码：`~/openclaw/workspace/project-evolution`
 - 文档：`docs/` 目录
-- 问题反馈：在 OpenClaw 中输入 `/evolution help`
+- 问题反馈：在 OpenClaw 中输入 `/evolve help`

@@ -17,7 +17,7 @@
 ## 2. 目录结构
 
 ```
-project-evolution/
+self-evolution/
 ├── core/                          # 业务逻辑层（当前与 OpenClaw 紧耦合）
 │   ├── __init__.py
 │   ├── models.py                  # 数据模型（ProjectState, Task, Plan, Case）
@@ -66,7 +66,7 @@ project-evolution/
 │   └── architecture/
 │
 ├── skills/
-│   └── project-evolution/
+│   └── self-evolution/
 │       └── SKILL.md               # 触发词定义
 │
 └── docs/
