@@ -6,3 +6,13 @@
 - 先做设计稿，再做 OpenClaw 版落地
 - 主控不阻塞，工作交给独立 subagent
 - 每完成约 10% 进度向主控汇报一次
+
+## 快速开始
+
+```bash
+cd /Users/mxm_pro/.openclaw/workspace/project-evolution
+chmod +x scripts/bootstrap.sh
+./scripts/bootstrap.sh duckduckgo
+```
+
+更多说明见：`docs/user-manual.md`

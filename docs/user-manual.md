@@ -12,39 +12,53 @@
 - Python 3.10+
 - OpenClaw 已安装并运行
 - 网络访问（用于搜索功能）
+- 推荐 macOS / Linux / WSL 环境
 
-### 1.2 安装步骤
+> 为了避免手动步骤过多，1.1–1.3 推荐直接用自动脚本完成。
+
+### 1.2 一键安装（推荐）
 
 ```bash
-# 1. 进入项目目录
 cd /Users/mxm_pro/.openclaw/workspace/project-evolution
-
-# 2. 创建虚拟环境（推荐）
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 3. 安装依赖
-pip install tavily-python duckduckgo-search
-
-# 4. 设置环境变量（Tavily API Key，推荐）
-export TAVILY_API_KEY=tvly-xxxxx
-# 或者 Brave Search（可选）
-export BRAVE_API_KEY=BSA...
+chmod +x scripts/bootstrap.sh
+./scripts/bootstrap.sh duckduckgo
 ```
+
+说明：
+- `duckduckgo`：默认免费方案，无需 API Key，适合先跑通
+- 如需更高质量搜索，可改成：
+  ```bash
+  ./scripts/bootstrap.sh tavily
+  ```
+- 如需 Brave，可使用：
+  ```bash
+  ./scripts/bootstrap.sh brave
+  ```
+
+脚本会自动完成：
+1. 检查 Python 环境
+2. 创建 `.venv`
+3. 安装 `requirements.txt`
+4. 生成 `.env.example` / `.env`
+5. 自动执行安装验证
 
 ### 1.3 验证安装
 
+如果你想单独验证，而不是在安装脚本里自动验证，可执行：
+
 ```bash
-# 验证 Python 模块可导入
 cd /Users/mxm_pro/.openclaw/workspace/project-evolution
-python3 -c "
-from providers import get_provider
-p = get_provider('duckduckgo')  # 不需要 API Key
-results = p.search('Python async', count=3)
-print(f'搜索返回 {len(results)} 条结果')
-print('✅ 安装成功')
-"
+source .venv/bin/activate
+python scripts/verify_install.py duckduckgo
 ```
+
+如果你已经配置了 Tavily API Key，也可以：
+
+```bash
+source .venv/bin/activate
+python scripts/verify_install.py tavily
+```
+
 
 ---
 

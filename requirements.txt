@@ -1,0 +1,4 @@
+tavily-python>=0.5.0
+duckduckgo-search>=6.0.0
+# Brave provider package name may vary by environment; keep optional by default.
+# Install manually if you plan to use Brave Search API.
