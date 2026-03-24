@@ -68,7 +68,7 @@ core/
 **依赖**：OpenClaw SDK / 工具接口
 
 ```
-adapter-openclaw/
+adapter_openclaw/
 ├── task_executor.py    # sessions_spawn 封装
 ├── scheduler.py        # cron 封装
 ├── state_manager.py    # memory/文件 封装

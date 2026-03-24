@@ -13,7 +13,7 @@
 
 **进行中**：
 - [ ] roadmap.md 完成/待完成标记（本文档）
-- [ ] 实际 Python 代码文件（core/ 和 adapter-openclaw/ 的真实实现）
+- [ ] 实际 Python 代码文件（core/ 和 adapter_openclaw/ 的真实实现）
 - [ ] 配置文件初始化
 
 **待完成**：
@@ -340,7 +340,7 @@ tasks:
    - `core/models.py`
    - `core/interfaces.py`
    - `core/investigator.py` ~ `core/case_library.py`
-   - `adapter-openclaw/task_executor.py` ~ `adapter-openclaw/orchestrator.py`
+   - `adapter_openclaw/task_executor.py` ~ `adapter_openclaw/orchestrator.py`
 
 2. **完成首次端到端演示**
    - 创建一个 demo 项目

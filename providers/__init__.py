@@ -72,33 +72,32 @@ def search_with_fallback(
     带 Fallback 的搜索
 
     策略：preferred → fallback[0] → fallback[1] → ...
-    只要有一个 Provider 成功就返回结果
-
-    Args:
-        query: 搜索关键词
-        count: 返回结果数量
-        preferred: 首选 Provider
-        fallback_providers: Fallback Provider 列表
-
-    Returns:
-        SearchResult 列表
-
-    Raises:
-        RuntimeError: 所有 Provider 均失败
+    只要有一个 Provider 成功并返回结果就立即返回。
+    如果所有 Provider 都执行成功但结果为空，则返回空列表而不是抛错。
+    只有当所有 Provider 都抛异常时，才抛 RuntimeError。
     """
     fallback_providers = fallback_providers or ["duckduckgo"]
-    all_providers = [preferred] + fallback_providers
+
+    all_providers = []
+    for name in [preferred] + list(fallback_providers):
+        if name not in all_providers:
+            all_providers.append(name)
 
     last_error = None
+    saw_success = False
     for provider_name in all_providers:
         try:
             provider = get_provider(provider_name)
             results = provider.search(query, count)
+            saw_success = True
             if results:
                 return results
         except Exception as e:
             last_error = e
             continue
+
+    if saw_success:
+        return []
 
     raise RuntimeError(
         f"所有搜索 Provider 均失败。"

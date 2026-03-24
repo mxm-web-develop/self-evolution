@@ -125,7 +125,7 @@ storage:
 
 此 Skill 依赖以下模块：
 - `core/*` - 核心业务逻辑
-- `adapter-openclaw/*` - OpenClaw 工具适配
+- `adapter_openclaw/*` - OpenClaw 工具适配
 
 ## 错误处理
 

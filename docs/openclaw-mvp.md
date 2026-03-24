@@ -31,7 +31,7 @@ project-evolution/
 │   ├── learner.py                 # 学习回写
 │   └── case_library.py            # 案例库
 │
-├── adapter-openclaw/              # OpenClaw 适配器
+├── adapter_openclaw/              # OpenClaw 适配器
 │   ├── __init__.py
 │   ├── bridge.py                  # 桥接器
 │   ├── task_executor.py           # sessions_spawn 封装
@@ -198,7 +198,7 @@ search:
 ### 5.1 TaskExecutor（sessions_spawn 封装）
 
 ```python
-# adapter-openclaw/task_executor.py
+# adapter_openclaw/task_executor.py
 import os
 import json
 from typing import Dict, Optional
@@ -246,7 +246,7 @@ class TaskExecutor:
 ### 5.2 StateManager（文件状态封装）
 
 ```python
-# adapter-openclaw/state_manager.py
+# adapter_openclaw/state_manager.py
 import os
 import json
 import shutil
@@ -320,7 +320,7 @@ class StateManager:
 ### 5.3 Notifier（消息通知封装）
 
 ```python
-# adapter-openclaw/notifier.py
+# adapter_openclaw/notifier.py
 from typing import Optional
 from openclaw import message
 
@@ -370,7 +370,7 @@ class Notifier:
 ### 5.4 Scheduler（定时任务封装）
 
 ```python
-# adapter-openclaw/scheduler.py
+# adapter_openclaw/scheduler.py
 from dataclasses import dataclass
 from typing import Callable, Dict
 
@@ -418,7 +418,7 @@ class Scheduler:
 ## 6. 桥接器（Bridge）
 
 ```python
-# adapter-openclaw/bridge.py
+# adapter_openclaw/bridge.py
 """OpenClaw Bridge：连接 Core 与 Adapter"""
 
 class OpenClawBridge:
@@ -917,7 +917,7 @@ class CaseLibrary:
 ## 8. 主流程编排（Orchestrator）
 
 ```python
-# adapter-openclaw/orchestrator.py
+# adapter_openclaw/orchestrator.py
 """主流程编排器"""
 
 from core.investigator import Investigator

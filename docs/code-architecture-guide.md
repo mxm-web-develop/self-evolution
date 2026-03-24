@@ -14,7 +14,7 @@
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────┐
-│              adapter-openclaw/（平台适配层）              │
+│              adapter_openclaw/（平台适配层）              │
 │   bridge.py · task_executor.py · state_manager.py       │
 │   notifier.py · scheduler.py · orchestrator.py           │
 └─────────────────────┬───────────────────────────────────┘
@@ -39,7 +39,7 @@
 
 | 层 | 目录 | 职责 | OpenClaw 依赖 |
 |---|---|---|---|
-| 平台适配层 | adapter-openclaw/ | OpenClaw 工具封装、流程编排 | ✅ 直接依赖 |
+| 平台适配层 | adapter_openclaw/ | OpenClaw 工具封装、流程编排 | ✅ 直接依赖 |
 | 业务逻辑层 | core/ | 调研/诊断/方案/评分/审批/执行/学习 | ❌ 无依赖 |
 | 搜索能力层 | providers/ | 多搜索 Provider 可插拔 | ❌ 无依赖 |
 
@@ -163,7 +163,7 @@
 
 ---
 
-## 3. adapter-openclaw 模块
+## 3. adapter_openclaw 模块
 
 ### 3.1 bridge.py — 桥接器（中心入口）
 
@@ -280,11 +280,11 @@ projects/{id}/config.yaml
     └── 读取 search.provider, project.id 等
 
 # 2. 初始化 Bridge
-adapter-openclaw/bridge.py
+adapter_openclaw/bridge.py
     └── 注入 projects_root, cases_root, search_provider
 
 # 3. 初始化 Core 模块
-adapter-openclaw/orchestrator.py
+adapter_openclaw/orchestrator.py
     └── ProjectEvolutionOrchestrator.__init__()
         └── Investigator(search_provider, case_library)
         └── DiagnoseEngine()
