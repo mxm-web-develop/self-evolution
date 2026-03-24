@@ -1,0 +1,44 @@
+# Demo 项目配置
+# 复制此文件并修改为你的实际项目配置
+
+project:
+  id: demo
+  name: Demo Project
+  description: 项目进化助手演示项目
+
+search:
+  # 搜索 Provider：tavily | brave | duckduckgo
+  # 推荐：tavily（默认，最高质量）
+  # 备选：duckduckgo（免费，无需 API Key）
+  #       brave（隐私友好）
+  provider: tavily
+
+  # 各 Provider 配置（按需填写，留空则从环境变量读取）
+  tavily:
+    api_key: ${TAVILY_API_KEY:-}
+  brave:
+    api_key: ${BRAVE_API_KEY:-}
+
+  # Fallback 顺序（当前 Provider 失败时自动切换）
+  # 建议至少配置一个免费 Provider 作为 fallback
+  fallback:
+    - duckduckgo
+    # - brave
+
+  # 单次搜索返回结果数
+  default_count: 5
+
+notification:
+  # 通知渠道：webchat（默认）
+  channel: webchat
+  # 通知目标：main（主会话）
+  target: main
+
+execution:
+  # 子代理超时时间（毫秒）
+  timeout_ms: 300000  # 5 分钟
+
+  # 每次 run() 执行几个 Phase
+  # 1 = 单步执行（适合演示）
+  # 99 = 全自动直到审批（适合自动化）
+  phases_per_run: 1
