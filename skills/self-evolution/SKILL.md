@@ -1,3 +1,8 @@
+---
+name: self-evolution
+description: 项目 onboarding、项目上下文管理，以及从活跃项目出发的 analyze → diagnose → plan → approve → execute(beta) → learn(beta) 闭环。
+---
+
 # self-evolution SKILL.md
 
 ## 适用场景
