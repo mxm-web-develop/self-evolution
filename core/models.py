@@ -48,10 +48,15 @@ class ProjectState:
 
     @classmethod
     def from_dict(cls, data: dict) -> "ProjectState":
-        """从字典恢复"""
+        """从字典恢复，只取 dataclass 已知字段，忽略多余字段。"""
+        # 兼容大小写：onboarding 保存 "IDLE"，enum 值是 "idle"
         data = data.copy()
-        data["phase"] = Phase(data.get("phase", "idle"))
-        return cls(**data)
+        phase_str = str(data.get("phase", "idle")).lower()
+        data["phase"] = Phase(phase_str)
+        # 只传 dataclass 已知字段
+        known = {f.name for f in cls.__dataclass_fields__.values()}
+        filtered = {k: v for k, v in data.items() if k in known}
+        return cls(**filtered)
 
     def add_history(self, action: str, detail: str = "") -> None:
         """添加历史记录"""

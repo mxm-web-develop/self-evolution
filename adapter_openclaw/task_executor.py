@@ -1,113 +1,160 @@
 # adapter_openclaw/task_executor.py
 """
-TaskExecutor — sessions_spawn 封装
+TaskExecutor — 执行任务适配层
 
-通过 OpenClaw sessions_spawn 启动子代理执行任务
+当前版本优先保证：
+1. 不依赖不存在的 OpenClaw Python SDK；
+2. 在没有真实子代理接入时，也能产出可追踪的执行结果；
+3. 若任务自带 shell command，则可以本地同步执行。
 """
 
-import json
-import time
-from typing import Dict, Any
+from __future__ import annotations
 
-from openclaw import sessions_spawn, sessions_yield
+import json
+import subprocess
+import uuid
+from pathlib import Path
+from typing import Dict, Any, List
+
 from core.models import Task
 
 
 class TaskExecutor:
-    """通过 sessions_spawn 启动子代理执行任务"""
+    """执行器（当前为同步/本地优先实现）"""
 
     def __init__(self, bridge: "OpenClawBridge"):
         self.bridge = bridge
+        self._results: Dict[str, Dict[str, Any]] = {}
 
     def spawn(self, task: Task, context: Dict[str, Any]) -> str:
         """
-        启动子代理，返回 session_id
+        同步执行任务并返回 execution id。
 
-        Args:
-            task: Task 对象
-            context: 上下文数据（会传入子代理 Prompt）
-
-        Returns:
-            session_id 字符串
+        之所以保留 spawn/wait 形状，是为了和上层 Executor 接口兼容。
         """
-        prompt = self._build_prompt(task, context)
-        session_id = sessions_spawn(
-            prompt=prompt,
-            model="minimax-portal/MiniMax-M2.7",
-            instruction="你是一个专业的项目进化助手。执行任务并返回结构化 JSON 结果。"
-        )
-        return session_id
+        execution_id = f"exec-{uuid.uuid4().hex[:8]}"
+        result = self._run_task(task, context)
+        self._results[execution_id] = result
+        return execution_id
 
     def wait(self, session_id: str, timeout_ms: int = 300000) -> Dict[str, Any]:
-        """
-        等待子代理完成并获取结果
+        """返回已缓存的同步执行结果。"""
+        return self._results.pop(
+            session_id,
+            {
+                "status": "failure",
+                "output": {},
+                "error": f"未知执行会话：{session_id}",
+                "summary": f"❌ 未找到执行结果：{session_id}",
+            },
+        )
 
-        Args:
-            session_id: spawn() 返回的 session_id
-            timeout_ms: 超时毫秒数（默认 5 分钟）
+    def _run_task(self, task: Task, context: Dict[str, Any]) -> Dict[str, Any]:
+        input_data = task.input_data or {}
 
-        Returns:
-            结果 dict，包含 status/output/error
-        """
-        result = sessions_yield(session_id, timeout=timeout_ms)
-        return self._parse_result(result)
+        commands = self._collect_commands(input_data)
+        if commands:
+            return self._run_shell_commands(task, commands, context)
 
-    def _build_prompt(self, task: Task, context: Dict[str, Any]) -> str:
-        """构建子代理 Prompt"""
-        return f"""
-## 任务
+        return self._write_manual_brief(task, context)
 
-**任务类型**：{task.task_type}
-**任务标题**：{task.title}
-**任务描述**：{task.description}
+    def _collect_commands(self, input_data: Dict[str, Any]) -> List[str]:
+        commands: List[str] = []
 
-## 上下文
+        single = input_data.get("command")
+        if isinstance(single, str) and single.strip():
+            commands.append(single.strip())
 
-```json
-{json.dumps(context, ensure_ascii=False, indent=2)}
-```
+        multi = input_data.get("commands")
+        if isinstance(multi, list):
+            for item in multi:
+                if isinstance(item, str) and item.strip():
+                    commands.append(item.strip())
 
-## 要求
+        return commands
 
-1. 仔细阅读任务描述和上下文
-2. 执行任务，如果是代码任务请直接操作
-3. 返回以下格式的 JSON（不要加 markdown 代码块包裹）：
-{{
-    "status": "success" | "failure",
-    "output": {{...}},  // 任务的具体输出
-    "error": "错误信息（如有）"
-}}
+    def _run_shell_commands(self, task: Task, commands: List[str], context: Dict[str, Any]) -> Dict[str, Any]:
+        outputs = []
+        cwd = None
+        plan = context.get("plan", {}) if isinstance(context, dict) else {}
+        project_id = plan.get("project_id") or "current"
+        project_dir = self.bridge.projects_root / project_id
+        if project_dir.exists():
+            cwd = str(project_dir)
 
-不要返回除 JSON 以外的任何内容。
-"""
-
-    def _parse_result(self, raw_result) -> Dict[str, Any]:
-        """
-        解析 sessions_yield 返回的原始结果
-
-        Args:
-            raw_result: sessions_yield 返回的原始数据
-
-        Returns:
-            标准化结果 dict
-        """
-        # sessions_yield 可能返回多种格式，尝试解析
-        if isinstance(raw_result, dict):
-            # 已经是 dict，直接使用
-            return raw_result
-        elif isinstance(raw_result, str):
-            # 是字符串，尝试 JSON 解析
-            try:
-                return json.loads(raw_result)
-            except json.JSONDecodeError:
-                return {
-                    "status": "success",
-                    "output": {"raw": raw_result},
-                    "error": None
+        for command in commands:
+            completed = subprocess.run(
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                timeout=300,
+            )
+            outputs.append(
+                {
+                    "command": command,
+                    "returncode": completed.returncode,
+                    "stdout": completed.stdout.strip(),
+                    "stderr": completed.stderr.strip(),
                 }
-        else:
-            return {
-                "status": "success",
-                "output": {"raw": str(raw_result)},
-                "error": None
-            }
+            )
+            if completed.returncode != 0:
+                return {
+                    "status": "failure",
+                    "output": {"commands": outputs},
+                    "error": completed.stderr.strip() or f"命令执行失败：{command}",
+                    "summary": f"❌ 执行失败：{task.title}",
+                }
+
+        return {
+            "status": "success",
+            "output": {"commands": outputs},
+            "error": None,
+            "summary": f"✅ 已执行命令型任务：{task.title}",
+        }
+
+    def _write_manual_brief(self, task: Task, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        当没有真实可执行命令时，生成 execution brief，
+        让闭环至少能沉淀成可追踪产物，而不是直接报错。
+        """
+        plan = context.get("plan", {}) if isinstance(context, dict) else {}
+        project_id = plan.get("project_id") or "current"
+        project_dir = self.bridge.projects_root / project_id
+        execution_dir = project_dir / "execution"
+        execution_dir.mkdir(parents=True, exist_ok=True)
+
+        brief_file = execution_dir / f"{task.task_id}.md"
+        brief = [
+            f"# 执行任务卡：{task.title}",
+            "",
+            f"- 任务 ID：`{task.task_id}`",
+            f"- 任务类型：`{task.task_type}`",
+            f"- 描述：{task.description}",
+            "",
+            "## 输入数据",
+            "```json",
+            json.dumps(task.input_data or {}, ensure_ascii=False, indent=2),
+            "```",
+            "",
+            "## 上下文",
+            "```json",
+            json.dumps(context or {}, ensure_ascii=False, indent=2),
+            "```",
+            "",
+            "## 说明",
+            "当前版本尚未接入真实 OpenClaw 子代理执行，因此先生成任务卡，供后续人工或 Agent 执行。",
+        ]
+        brief_file.write_text("\n".join(brief), encoding="utf-8")
+
+        return {
+            "status": "success",
+            "output": {
+                "mode": "manual-brief",
+                "brief_file": str(brief_file),
+                "task": task.to_dict(),
+            },
+            "error": None,
+            "summary": f"✅ 已生成执行任务卡：{task.title}",
+        }

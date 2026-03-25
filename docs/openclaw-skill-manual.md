@@ -1,7 +1,7 @@
 # Self-Evolution OpenClaw Skill 使用说明书
 
-> 版本：Skill Beta v1
-> 定位：在 OpenClaw 中作为统一的项目 onboarding / 项目上下文管理入口使用
+> 版本：Skill Beta v2（新增项目自进化分析闭环）
+> 定位：在 OpenClaw 中作为统一的项目 onboarding / 项目上下文管理 / 项目自进化分析入口使用
 
 ---
 
@@ -13,11 +13,8 @@
 - 已有项目接入
 - 项目列表管理
 - 活跃项目切换
+- **从当前活跃项目出发的调研 → 诊断最小闭环（Beta）**
 - 通过自然语言和 `/evolve` 统一进入项目管理流程
-
-它的目标不是替代完整项目管理平台，而是先在 OpenClaw 里成为：
-
-> **“我想开始/接入/切换/查看项目”时的统一入口 skill。**
 
 ---
 
@@ -31,16 +28,13 @@
 - 活跃项目管理
 - 中英双语规则式意图识别
 - Skill 入口脚本：`scripts/evolve_skill.py`
+- **从活跃项目出发的调研 → 诊断 最小闭环（Beta）**
 
 ### 尚未完成
 - 真正自由对话级别的复杂语义理解
-- 完整调研 → 诊断 → 方案 → 执行闭环
+- 方案 → 审批 → 执行 闭环（调研诊断已完成，方案往后待续）
 - 深度代码理解与复杂项目扫描
-- 自动编排 OpenClaw 子代理执行复杂任务
-
-所以当前最准确的说法是：
-
-> **它已经是一个可用的 OpenClaw skill Beta，但能力重点在 onboarding 和项目上下文管理。**
+- 与 OpenClaw sessions / cron 的深度自动编排
 
 ---
 
@@ -72,6 +66,33 @@
 - what is the active project
 - switch to pixgen
 - onboard existing project /Users/xxx/my-project
+
+### 3.3 分析/诊断类命令（新！Beta）
+
+**前提**：必须先有一个活跃项目。
+
+中文：
+- `/evolve analyze 帮我分析项目的性能瓶颈`
+- `帮我诊断这个项目的 UX 问题`
+- `调研一下这个项目的功能优先级`
+- `帮我看看有什么优化建议`
+- `分析 flowforge 的架构改进方向`
+
+英文：
+- `/evolve analyze help me analyze performance bottlenecks`
+- `diagnose the UX issues of this project`
+- `run a diagnosis on this project`
+- `investigate optimization opportunities`
+
+**触发后会发生什么**：
+1. 自动执行调研（investigate）：搜索相似案例 + 网络调研
+2. 自动执行诊断（diagnose）：判断问题类型、根因、优先级
+3. 生成格式化 Markdown 报告
+4. 提示用户下一步可以生成方案
+
+---
+
+## 4. 内部工作原理
 
 ---
 
@@ -229,6 +250,6 @@ python3 scripts/evolve_skill.py "接入项目 /Users/xxx/my-project"
 - 已有项目接入
 - 项目上下文管理
 
-如果你想继续扩展，它的下一步就不再是“有没有 skill”，而是：
+如果你想继续扩展，它的下一步就不再是"有没有 skill"，而是：
 
 > **把这个 skill 从 onboarding 管理器，升级成真正的项目自进化引擎。**

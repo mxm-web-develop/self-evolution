@@ -9,15 +9,15 @@ adapter_openclaw — OpenClaw 平台适配层
 from .bridge import OpenClawBridge
 from .orchestrator import ProjectEvolutionOrchestrator
 from .state_manager import StateManager
-from .task_executor import TaskExecutor
 from .notifier import Notifier
 from .scheduler import Scheduler
 
+# TaskExecutor 需要 openclaw 模块，仅在 OpenClaw 环境中可用
+# 通过 bridge.task_executor 延迟访问，不在此处直接导入
 __all__ = [
     "OpenClawBridge",
     "ProjectEvolutionOrchestrator",
     "StateManager",
-    "TaskExecutor",
     "Notifier",
     "Scheduler",
 ]

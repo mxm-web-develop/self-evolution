@@ -79,16 +79,28 @@ class Notifier:
     ) -> str:
         """格式化审批请求消息"""
         emoji_scores = []
-        final = scores.get("final", "N/A")
-        if isinstance(final, (int, float)):
-            if final >= 7:
-                emoji = "🟢"
-            elif final >= 5:
-                emoji = "🟡"
-            else:
-                emoji = "🔴"
-        else:
+        if scores is None:
+            final = "N/A"
             emoji = "⚪"
+            business = "N/A"
+            technical = "N/A"
+            ux = "N/A"
+            recommendation = "无评分数据"
+        else:
+            final = scores.get("final", "N/A")
+            business = scores.get("business", "N/A")
+            technical = scores.get("technical", "N/A")
+            ux = scores.get("ux", "N/A")
+            recommendation = scores.get("recommendation", "N/A")
+            if isinstance(final, (int, float)):
+                if final >= 7:
+                    emoji = "🟢"
+                elif final >= 5:
+                    emoji = "🟡"
+                else:
+                    emoji = "🔴"
+            else:
+                emoji = "⚪"
 
         lines = [
             f"📋 **审批请求**",
@@ -97,12 +109,12 @@ class Notifier:
             f"**方案**：{plan_title}",
             "",
             "**评分结果**：",
-            f"  - 业务价值：{scores.get('business', 'N/A')}",
-            f"  - 技术可行性：{scores.get('technical', 'N/A')}",
-            f"  - 用户体验：{scores.get('ux', 'N/A')}",
+            f"  - 业务价值：{business}",
+            f"  - 技术可行性：{technical}",
+            f"  - 用户体验：{ux}",
             f"  - **{emoji} 总分：{final}**",
             "",
-            f"**建议**：{scores.get('recommendation', 'N/A')}",
+            f"**建议**：{recommendation}",
             "",
             "---",
             "请回复以下之一进行审批：",

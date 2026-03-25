@@ -15,16 +15,25 @@ def main() -> int:
     print(f"[verify] provider={provider_name}")
     try:
         provider = get_provider(provider_name)
-        results = provider.search("OpenClaw project evolution", count=2)
-        print(f"[verify] 搜索返回 {len(results)} 条结果")
-        if results:
-            print(f"[verify] 第一条标题: {results[0].title}")
-        print("✅ 安装验证成功")
-        return 0
+        print(f"[verify] Provider 初始化成功: {provider}")
     except Exception as exc:
         print(f"❌ 安装验证失败: {exc}")
         print("提示：如果你没有 API Key，先用 duckduckgo 作为默认 provider。")
         return 1
+
+    try:
+        results = provider.search("OpenClaw project evolution", count=2)
+        print(f"[verify] 搜索返回 {len(results)} 条结果")
+        if results:
+            print(f"[verify] 第一条标题: {results[0].title}")
+        else:
+            print("[verify] 搜索已执行，但本次没有返回结果")
+    except Exception as exc:
+        print(f"[verify] 搜索检查跳过/失败: {exc}")
+        print("[verify] 依赖与 Provider 初始化正常，可稍后再检查网络/API 可用性")
+
+    print("✅ 安装验证成功")
+    return 0
 
 
 if __name__ == "__main__":

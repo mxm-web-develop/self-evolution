@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "case_id": "case-plan-b7810f76",
+      "category": "optimization",
+      "tags": [
+        "optimization",
+        "提升用户体验",
+        "降低资源消耗",
+        "问题得到缓解"
+      ],
+      "outcome": "success",
+      "file": "/Users/mxm_pro/.openclaw/workspace/self-evolution/cases/optimization/case-plan-b7810f76.md"
+    },
+    {
+      "case_id": "case-plan-9133de19",
+      "category": "optimization",
+      "tags": [
+        "optimization",
+        "提升用户体验",
+        "降低资源消耗",
+        "问题得到缓解"
+      ],
+      "outcome": "success",
+      "file": "/Users/mxm_pro/.openclaw/workspace/self-evolution/cases/optimization/case-plan-9133de19.md"
+    },
+    {
+      "case_id": "case-plan-9133de19",
+      "category": "optimization",
+      "tags": [
+        "optimization",
+        "提升用户体验",
+        "降低资源消耗",
+        "问题得到缓解"
+      ],
+      "outcome": "success",
+      "file": "/Users/mxm_pro/.openclaw/workspace/self-evolution/cases/optimization/case-plan-9133de19.md"
+    }
+  ]
+}
