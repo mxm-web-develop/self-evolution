@@ -121,14 +121,29 @@ class Executor:
             1 for r in results
             if isinstance(r, dict) and r.get("output", {}).get("mode") == "manual-brief"
         )
+        agent_count = sum(
+            1 for r in results
+            if isinstance(r, dict) and r.get("output", {}).get("mode") == "openclaw-agent"
+        )
+        shell_count = sum(
+            1 for r in results
+            if isinstance(r, dict) and r.get("output", {}).get("mode") == "shell"
+        )
+
+        mode_parts = []
+        if agent_count:
+            mode_parts.append(f"agent:{agent_count}")
+        if shell_count:
+            mode_parts.append(f"shell:{shell_count}")
+        if brief_count:
+            mode_parts.append(f"brief:{brief_count}")
+        mode_suffix = f"（{' / '.join(mode_parts)}）" if mode_parts else ""
 
         if success_count == total:
             if brief_count == total:
-                return f"✅ 已生成 {total}/{total} 个执行任务卡，待人工或 Agent 落地"
-            if brief_count > 0:
-                return f"✅ 完成 {success_count}/{total} 个子任务（含 {brief_count} 个任务卡）"
-            return f"✅ 完成 {success_count}/{total} 个子任务"
+                return f"✅ 已生成 {total}/{total} 个执行任务卡，待人工或 Agent 落地{mode_suffix}"
+            return f"✅ 完成 {success_count}/{total} 个子任务{mode_suffix}"
         elif success_count > 0:
-            return f"⚠️ 部分完成 {success_count}/{total} 个子任务"
+            return f"⚠️ 部分完成 {success_count}/{total} 个子任务{mode_suffix}"
         else:
-            return f"❌ 全部 {total} 个子任务失败"
+            return f"❌ 全部 {total} 个子任务失败{mode_suffix}"

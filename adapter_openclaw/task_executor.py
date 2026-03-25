@@ -6,6 +6,11 @@ TaskExecutor — 执行任务适配层
 1. 若任务自带 shell command，直接本地执行；
 2. 否则优先尝试通过 `openclaw agent --local` 拉起真实 agent 执行；
 3. 若真实执行不可用，则回退为 execution brief，保证闭环不断。
+
+稳定性增强：
+- 支持项目级 execution.timeout_ms
+- 每个子任务都会落 execution result JSON
+- agent 超时/失败时会清晰回退，不再长时间无反馈
 """
 
 from __future__ import annotations
@@ -52,13 +57,18 @@ class TaskExecutor:
 
         commands = self._collect_commands(input_data)
         if commands:
-            return self._run_shell_commands(task, commands, context)
+            result = self._run_shell_commands(task, commands, context)
+            self._write_execution_result(task, context, result)
+            return result
 
         agent_result = self._run_via_openclaw_agent(task, context)
         if agent_result is not None:
+            self._write_execution_result(task, context, agent_result)
             return agent_result
 
-        return self._write_manual_brief(task, context, note="真实 agent 执行不可用，已回退为任务卡。")
+        fallback = self._write_manual_brief(task, context, note="真实 agent 执行不可用，已回退为任务卡。")
+        self._write_execution_result(task, context, fallback)
+        return fallback
 
     def _collect_commands(self, input_data: Dict[str, Any]) -> List[str]:
         commands: List[str] = []
@@ -78,16 +88,26 @@ class TaskExecutor:
     def _run_shell_commands(self, task: Task, commands: List[str], context: Dict[str, Any]) -> Dict[str, Any]:
         outputs = []
         cwd = self._resolve_target_dir(context)
+        timeout_seconds = max(30, self._resolve_timeout_ms(context) // 1000)
 
         for command in commands:
-            completed = subprocess.run(
-                command,
-                shell=True,
-                capture_output=True,
-                text=True,
-                cwd=cwd,
-                timeout=300,
-            )
+            try:
+                completed = subprocess.run(
+                    command,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=cwd,
+                    timeout=timeout_seconds,
+                )
+            except subprocess.TimeoutExpired:
+                return {
+                    "status": "failure",
+                    "output": {"commands": outputs, "mode": "shell", "timeout_seconds": timeout_seconds},
+                    "error": f"命令执行超时（>{timeout_seconds}s）：{command}",
+                    "summary": f"❌ 执行超时：{task.title}",
+                }
+
             outputs.append(
                 {
                     "command": command,
@@ -99,7 +119,7 @@ class TaskExecutor:
             if completed.returncode != 0:
                 return {
                     "status": "failure",
-                    "output": {"commands": outputs},
+                    "output": {"commands": outputs, "mode": "shell"},
                     "error": completed.stderr.strip() or f"命令执行失败：{command}",
                     "summary": f"❌ 执行失败：{task.title}",
                 }
@@ -119,6 +139,7 @@ class TaskExecutor:
         env = os.environ.copy()
         env["PATH"] = f"{self._node_bin_dir}:{env.get('PATH', '')}"
         cwd = self._resolve_target_dir(context) or str(self.bridge.projects_root.parent)
+        timeout_seconds = max(60, self._resolve_timeout_ms(context) // 1000)
 
         command = [
             self._openclaw_bin,
@@ -129,6 +150,8 @@ class TaskExecutor:
             "--thinking",
             "low",
             "--json",
+            "--timeout",
+            str(timeout_seconds),
             "--message",
             prompt,
         ]
@@ -139,8 +162,14 @@ class TaskExecutor:
                 capture_output=True,
                 text=True,
                 cwd=cwd,
-                timeout=600,
+                timeout=timeout_seconds + 20,
                 env=env,
+            )
+        except subprocess.TimeoutExpired:
+            return self._write_manual_brief(
+                task,
+                context,
+                note=f"真实 agent 执行超时（>{timeout_seconds}s），已自动回退为任务卡。",
             )
         except Exception as exc:
             return {
@@ -152,16 +181,13 @@ class TaskExecutor:
 
         if completed.returncode != 0:
             stderr = (completed.stderr or completed.stdout or "").strip()
-            return None if "requires Node" in stderr else {
-                "status": "failure",
-                "output": {
-                    "mode": "openclaw-agent",
-                    "stdout": completed.stdout.strip(),
-                    "stderr": completed.stderr.strip(),
-                },
-                "error": stderr or "openclaw agent 执行失败",
-                "summary": f"❌ 真实 agent 执行失败：{task.title}",
-            }
+            if "requires Node" in stderr:
+                return None
+            return self._write_manual_brief(
+                task,
+                context,
+                note=f"真实 agent 执行失败，已回退为任务卡。错误：{stderr or 'unknown'}",
+            )
 
         parsed = self._parse_agent_json_output(completed.stdout)
         if parsed is None:
@@ -231,6 +257,37 @@ class TaskExecutor:
             return str(project_dir)
         return None
 
+    def _resolve_timeout_ms(self, context: Dict[str, Any]) -> int:
+        plan = context.get("plan", {}) if isinstance(context, dict) else {}
+        project_id = plan.get("project_id") or "current"
+        config_file = self.bridge.projects_root / project_id / "config.yaml"
+        default_timeout = 300000
+        if not config_file.exists():
+            return default_timeout
+
+        try:
+            lines = config_file.read_text(encoding="utf-8").splitlines()
+        except Exception:
+            return default_timeout
+
+        in_execution = False
+        for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if not line.startswith(" ") and stripped.startswith("execution:"):
+                in_execution = True
+                continue
+            if in_execution and not line.startswith(" "):
+                in_execution = False
+            if in_execution and stripped.startswith("timeout_ms:"):
+                raw = stripped.split(":", 1)[1].split("#", 1)[0].strip()
+                try:
+                    return int(raw)
+                except Exception:
+                    return default_timeout
+        return default_timeout
+
     def _build_agent_prompt(self, task: Task, context: Dict[str, Any]) -> str:
         plan = context.get("plan", {}) if isinstance(context, dict) else {}
         target_dir = self._resolve_target_dir(context) or str(self.bridge.projects_root.parent)
@@ -268,6 +325,20 @@ class TaskExecutor:
 任务上下文：
 {json.dumps(prompt, ensure_ascii=False, indent=2)}
 """.strip()
+
+    def _write_execution_result(self, task: Task, context: Dict[str, Any], result: Dict[str, Any]) -> None:
+        plan = context.get("plan", {}) if isinstance(context, dict) else {}
+        project_id = plan.get("project_id") or "current"
+        project_dir = self.bridge.projects_root / project_id
+        execution_dir = project_dir / "execution"
+        execution_dir.mkdir(parents=True, exist_ok=True)
+        result_file = execution_dir / f"{task.task_id}.result.json"
+        payload = {
+            "task": task.to_dict(),
+            "context": context,
+            "result": result,
+        }
+        result_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def _write_manual_brief(self, task: Task, context: Dict[str, Any], note: str = "当前版本尚未接入真实 OpenClaw 子代理执行，因此先生成任务卡，供后续人工或 Agent 执行。") -> Dict[str, Any]:
         plan = context.get("plan", {}) if isinstance(context, dict) else {}
