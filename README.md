@@ -348,6 +348,33 @@ router.get_active_project()
 | `config.yaml` | 项目配置 |
 | `health-report.md` | 健康度报告（仅已有项目） |
 
+### /evolve 对话式入口（Beta）
+
+现在已经提供两个入口：
+
+#### 1) 低层命令入口（保留）
+
+```bash
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
+python3 scripts/evolve_chat.py "/evolve"
+python3 scripts/evolve_chat.py "/evolve status"
+python3 scripts/evolve_chat.py "/evolve new AI 写作工作流平台"
+```
+
+#### 2) OpenClaw Skill 统一入口（推荐）
+
+```bash
+cd /Users/mxm_pro/.openclaw/workspace/self-evolution
+python3 scripts/evolve_skill.py "/evolve status"
+python3 scripts/evolve_skill.py "看看我有哪些项目"
+python3 scripts/evolve_skill.py "切换到 pixgen"
+python3 scripts/evolve_skill.py "帮我新建一个项目：AI 写作工作流平台"
+```
+
+`scripts/evolve_skill.py` 会先做中英双语自然语言归一化，再统一转给 `EvolveChatFlow`。
+
+它会在 `runtime/evolve-chat-state.json` 中维护当前 onboarding 对话状态。
+
 ### Demo 脚本
 
 ```bash
@@ -364,12 +391,15 @@ PYTHONPATH=. python3 scripts/demo_onboarding.py
 - 统一入口 OnboardingRouter
 - CLI（完整）
 - Demo 脚本
+- `scripts/evolve_skill.py` OpenClaw Skill 统一入口
+- 中英双语自然语言意图归一化（项目列表 / 活跃项目 / 切换 / 新建 / 接入已有项目）
+- `skills/self-evolution/SKILL.md`
+- `docs/openclaw-skill-manual.md` 使用说明书
 
 ⏳ 本轮未完成（待后续迭代）：
+- 完整自由语义理解（当前是规则驱动）
 - 多轮对话真正接入 OpenClaw message 回路
-- 自然语言意图识别路由
 - 复杂项目结构深度扫描（多语言混合项目）
-- OpenClaw skill 集成（SKILL.md）
+- 调研 → 诊断 → 方案 → 审批 → 执行 全闭环 skill 化
 
-
-当前处于内部开发与快速迭代阶段。
+当前处于内部开发与快速迭代阶段，但已具备 OpenClaw Skill Beta 形态。

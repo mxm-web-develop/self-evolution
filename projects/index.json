@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-03-24T18:17:24.563951",
+  "updated_at": "2026-03-25T09:19:37.249626",
   "active_project_id": "pixgen",
   "projects": [
     {
@@ -12,6 +12,18 @@
       "status": "active",
       "created_at": "2026-03-24T18:14:08.194888",
       "last_active_at": "2026-03-24T18:14:08.194888",
+      "phase": "IDLE",
+      "onboarding_completed": true
+    },
+    {
+      "id": "flowforge",
+      "name": "FlowForge",
+      "description": "AI 写作工作流平台",
+      "path": "/Users/mxm_pro/.openclaw/workspace/self-evolution/projects/flowforge",
+      "type": "new",
+      "status": "active",
+      "created_at": "2026-03-24T21:24:52.554524",
+      "last_active_at": "2026-03-24T21:24:52.554524",
       "phase": "IDLE",
       "onboarding_completed": true
     }
