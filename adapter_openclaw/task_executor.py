@@ -2,43 +2,41 @@
 """
 TaskExecutor — 执行任务适配层
 
-当前版本优先保证：
-1. 不依赖不存在的 OpenClaw Python SDK；
-2. 在没有真实子代理接入时，也能产出可追踪的执行结果；
-3. 若任务自带 shell command，则可以本地同步执行。
+当前版本执行优先级：
+1. 若任务自带 shell command，直接本地执行；
+2. 否则优先尝试通过 `openclaw agent --local` 拉起真实 agent 执行；
+3. 若真实执行不可用，则回退为 execution brief，保证闭环不断。
 """
 
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import uuid
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from core.models import Task
 
 
 class TaskExecutor:
-    """执行器（当前为同步/本地优先实现）"""
+    """执行器（命令执行 + OpenClaw Agent + 任务卡回退）"""
 
     def __init__(self, bridge: "OpenClawBridge"):
         self.bridge = bridge
         self._results: Dict[str, Dict[str, Any]] = {}
+        self._openclaw_bin = shutil.which("openclaw") or "/Users/mxm_pro/.npm-global/bin/openclaw"
+        self._node_bin_dir = "/Users/mxm_pro/.local/share/fnm/aliases/default/bin"
 
     def spawn(self, task: Task, context: Dict[str, Any]) -> str:
-        """
-        同步执行任务并返回 execution id。
-
-        之所以保留 spawn/wait 形状，是为了和上层 Executor 接口兼容。
-        """
         execution_id = f"exec-{uuid.uuid4().hex[:8]}"
         result = self._run_task(task, context)
         self._results[execution_id] = result
         return execution_id
 
     def wait(self, session_id: str, timeout_ms: int = 300000) -> Dict[str, Any]:
-        """返回已缓存的同步执行结果。"""
         return self._results.pop(
             session_id,
             {
@@ -56,7 +54,11 @@ class TaskExecutor:
         if commands:
             return self._run_shell_commands(task, commands, context)
 
-        return self._write_manual_brief(task, context)
+        agent_result = self._run_via_openclaw_agent(task, context)
+        if agent_result is not None:
+            return agent_result
+
+        return self._write_manual_brief(task, context, note="真实 agent 执行不可用，已回退为任务卡。")
 
     def _collect_commands(self, input_data: Dict[str, Any]) -> List[str]:
         commands: List[str] = []
@@ -75,12 +77,7 @@ class TaskExecutor:
 
     def _run_shell_commands(self, task: Task, commands: List[str], context: Dict[str, Any]) -> Dict[str, Any]:
         outputs = []
-        cwd = None
-        plan = context.get("plan", {}) if isinstance(context, dict) else {}
-        project_id = plan.get("project_id") or "current"
-        project_dir = self.bridge.projects_root / project_id
-        if project_dir.exists():
-            cwd = str(project_dir)
+        cwd = self._resolve_target_dir(context)
 
         for command in commands:
             completed = subprocess.run(
@@ -109,16 +106,170 @@ class TaskExecutor:
 
         return {
             "status": "success",
-            "output": {"commands": outputs},
+            "output": {"commands": outputs, "mode": "shell"},
             "error": None,
             "summary": f"✅ 已执行命令型任务：{task.title}",
         }
 
-    def _write_manual_brief(self, task: Task, context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        当没有真实可执行命令时，生成 execution brief，
-        让闭环至少能沉淀成可追踪产物，而不是直接报错。
-        """
+    def _run_via_openclaw_agent(self, task: Task, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        if not Path(self._openclaw_bin).exists():
+            return None
+
+        prompt = self._build_agent_prompt(task, context)
+        env = os.environ.copy()
+        env["PATH"] = f"{self._node_bin_dir}:{env.get('PATH', '')}"
+        cwd = self._resolve_target_dir(context) or str(self.bridge.projects_root.parent)
+
+        command = [
+            self._openclaw_bin,
+            "agent",
+            "--local",
+            "--agent",
+            "main",
+            "--thinking",
+            "low",
+            "--json",
+            "--message",
+            prompt,
+        ]
+
+        try:
+            completed = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                timeout=600,
+                env=env,
+            )
+        except Exception as exc:
+            return {
+                "status": "failure",
+                "output": {"mode": "openclaw-agent", "exception": str(exc)},
+                "error": str(exc),
+                "summary": f"❌ 真实 agent 执行启动失败：{task.title}",
+            }
+
+        if completed.returncode != 0:
+            stderr = (completed.stderr or completed.stdout or "").strip()
+            return None if "requires Node" in stderr else {
+                "status": "failure",
+                "output": {
+                    "mode": "openclaw-agent",
+                    "stdout": completed.stdout.strip(),
+                    "stderr": completed.stderr.strip(),
+                },
+                "error": stderr or "openclaw agent 执行失败",
+                "summary": f"❌ 真实 agent 执行失败：{task.title}",
+            }
+
+        parsed = self._parse_agent_json_output(completed.stdout)
+        if parsed is None:
+            return {
+                "status": "success",
+                "output": {
+                    "mode": "openclaw-agent",
+                    "raw": completed.stdout.strip(),
+                },
+                "error": None,
+                "summary": f"✅ 真实 agent 已执行任务：{task.title}",
+            }
+
+        return {
+            "status": parsed.get("status", "success"),
+            "output": {
+                "mode": "openclaw-agent",
+                "agent_result": parsed,
+            },
+            "error": parsed.get("error"),
+            "summary": parsed.get("summary") or f"✅ 真实 agent 已执行任务：{task.title}",
+        }
+
+    def _parse_agent_json_output(self, stdout: str) -> Optional[Dict[str, Any]]:
+        text = (stdout or "").strip()
+        if not text:
+            return None
+
+        try:
+            outer = json.loads(text)
+        except json.JSONDecodeError:
+            return None
+
+        payloads = outer.get("payloads")
+        if not isinstance(payloads, list) or not payloads:
+            return outer if isinstance(outer, dict) else None
+
+        text_payload = payloads[0].get("text") if isinstance(payloads[0], dict) else None
+        if not text_payload:
+            return None
+
+        try:
+            return json.loads(text_payload)
+        except json.JSONDecodeError:
+            return {
+                "status": "success",
+                "summary": text_payload.strip(),
+                "raw": text_payload,
+            }
+
+    def _resolve_target_dir(self, context: Dict[str, Any]) -> Optional[str]:
+        plan = context.get("plan", {}) if isinstance(context, dict) else {}
+        project_id = plan.get("project_id") or "current"
+        project_dir = self.bridge.projects_root / project_id
+
+        state_file = project_dir / "state.json"
+        if state_file.exists():
+            try:
+                data = json.loads(state_file.read_text(encoding="utf-8"))
+                real_path = data.get("context", {}).get("project_path")
+                if real_path and Path(real_path).exists():
+                    return str(Path(real_path))
+            except Exception:
+                pass
+
+        if project_dir.exists():
+            return str(project_dir)
+        return None
+
+    def _build_agent_prompt(self, task: Task, context: Dict[str, Any]) -> str:
+        plan = context.get("plan", {}) if isinstance(context, dict) else {}
+        target_dir = self._resolve_target_dir(context) or str(self.bridge.projects_root.parent)
+
+        prompt = {
+            "task_id": task.task_id,
+            "title": task.title,
+            "description": task.description,
+            "task_type": task.task_type,
+            "target_dir": target_dir,
+            "input_data": task.input_data or {},
+            "plan": plan,
+        }
+
+        return f"""
+你正在执行 self-evolution 的真实执行任务。
+
+目标目录：{target_dir}
+要求：
+1. 只在目标目录及其必要上下文内工作；
+2. 能实际落地就直接落地（允许读写文件、运行必要命令）；
+3. 如果信息不足，至少产出一个清晰的 execution artifact（如 TODO、实现草稿、变更说明）；
+4. 返回时只输出 JSON，不要输出 markdown 代码块。
+
+输出 JSON 格式：
+{{
+  "status": "success" | "failure",
+  "summary": "一句话总结",
+  "files_changed": ["相对或绝对路径"],
+  "commands_run": ["命令"],
+  "notes": ["补充说明"],
+  "error": null
+}}
+
+任务上下文：
+{json.dumps(prompt, ensure_ascii=False, indent=2)}
+""".strip()
+
+    def _write_manual_brief(self, task: Task, context: Dict[str, Any], note: str = "当前版本尚未接入真实 OpenClaw 子代理执行，因此先生成任务卡，供后续人工或 Agent 执行。") -> Dict[str, Any]:
         plan = context.get("plan", {}) if isinstance(context, dict) else {}
         project_id = plan.get("project_id") or "current"
         project_dir = self.bridge.projects_root / project_id
@@ -144,7 +295,7 @@ class TaskExecutor:
             "```",
             "",
             "## 说明",
-            "当前版本尚未接入真实 OpenClaw 子代理执行，因此先生成任务卡，供后续人工或 Agent 执行。",
+            note,
         ]
         brief_file.write_text("\n".join(brief), encoding="utf-8")
 

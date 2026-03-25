@@ -32,7 +32,7 @@
 
 ### 尚未完成
 - 真正自由对话级别的复杂语义理解（当前已升级为“规则 fast-path + semantic router + confirmation gate”的混合模式）
-- 真正的子代理自动执行链路（当前执行阶段默认优先生成任务卡）
+- 更完整的多 agent / 子代理自动执行链路（当前已优先尝试真实 agent 执行；若环境不满足则回退为任务卡）
 - 深度代码理解与复杂项目扫描
 - 与 OpenClaw sessions / cron 的深度自动编排
 
