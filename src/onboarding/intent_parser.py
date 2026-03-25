@@ -48,10 +48,7 @@ class EvolveIntentParser:
         if self._is_status(compact):
             return ParsedIntent(kind="status", command="/evolve status", confidence=0.9)
 
-        if self._is_active(compact):
-            return ParsedIntent(kind="active", command="/evolve active", confidence=0.9)
-
-        # 分析/诊断类意图（优先级较高）
+        # 分析/诊断类意图（优先级高于 active，避免“帮我分析当前项目”被误判）
         if self._is_analyze(compact):
             problem = self._extract_analyze_problem(raw)
             return ParsedIntent(
@@ -60,6 +57,9 @@ class EvolveIntentParser:
                 confidence=0.88,
                 analyze_problem=problem or raw
             )
+
+        if self._is_active(compact):
+            return ParsedIntent(kind="active", command="/evolve active", confidence=0.9)
 
         # 审批/执行意图（优先于 plan，避免“执行方案A”被误判成“生成方案”）
         if self._is_approve(compact) or self._is_execute(compact):

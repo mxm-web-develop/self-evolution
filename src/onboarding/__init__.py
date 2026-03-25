@@ -10,6 +10,8 @@ from .existing_project import ExistingProjectInitializer
 from .router import OnboardingRouter
 from .chat_flow import EvolveChatFlow
 from .intent_parser import EvolveIntentParser, ParsedIntent
+from .route_models import Route, RouteAction, RiskLevel, DecisionMode, RouteContext
+from .semantic_router import SemanticRouter
 
 __all__ = [
     "ProjectIndex",
@@ -22,4 +24,10 @@ __all__ = [
     "EvolveChatFlow",
     "EvolveIntentParser",
     "ParsedIntent",
+    "Route",
+    "RouteAction",
+    "RiskLevel",
+    "DecisionMode",
+    "RouteContext",
+    "SemanticRouter",
 ]
