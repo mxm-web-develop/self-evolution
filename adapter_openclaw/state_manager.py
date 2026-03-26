@@ -129,6 +129,12 @@ class StateManager:
         risks_lines = "".join(f"- {r}\n" for r in plan.risks)
         outcomes_lines = "".join(f"- {o}\n" for o in plan.expected_outcomes)
 
+        action_items_lines = ""
+        if plan.action_items:
+            action_items_lines = "## 🎯 具体行动项\n\n"
+            action_items_lines += "".join(f"- {item}\n" for item in plan.action_items)
+            action_items_lines += "\n"
+
         return f"""# 方案：{plan.title}
 
 ## 描述
@@ -143,7 +149,7 @@ class StateManager:
 - **执行方式**：{est.get('execution_style', 'N/A')}
 
 ## 风险
-{risks_lines}## 预期结果
+{risks_lines}{action_items_lines}## 预期结果
 {outcomes_lines}{scores_md}
 
 ## 审批

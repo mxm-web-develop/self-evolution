@@ -99,6 +99,7 @@ class Plan:
     resource_estimate: Dict[str, Any]
     risks: List[str]
     expected_outcomes: List[str]
+    action_items: Optional[List[str]] = None
     scores: Optional[Dict[str, float]] = None
     approved: Optional[bool] = None
     approver_notes: Optional[str] = None

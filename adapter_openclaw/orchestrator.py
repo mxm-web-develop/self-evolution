@@ -72,6 +72,9 @@ class ProjectEvolutionOrchestrator:
 
         if state is None:
             state = self._create_state(project_id, problem)
+        else:
+            # 已加载的 state，也补充 config 上下文（如果缺失）
+            self._enrich_context(state)
 
         # 保存当前时间
         state.updated_at = self._now()
@@ -101,7 +104,7 @@ class ProjectEvolutionOrchestrator:
 
         # Phase: INVESTIGATING
         if state.phase == Phase.INVESTIGATING:
-            investigation = self.investigator.investigate(problem)
+            investigation = self.investigator.investigate(problem, project_context=state.context)
             state.context["investigation"] = investigation
             state.phase = Phase.IDLE
             sm.save_investigation(project_id, investigation)
@@ -115,7 +118,8 @@ class ProjectEvolutionOrchestrator:
         # Phase: DIAGNOSING
         if state.phase == Phase.DIAGNOSING:
             diagnosis = self.diagnose_engine.diagnose(
-                state.context.get("investigation", {})
+                state.context.get("investigation", {}),
+                project_context=state.context
             )
             state.context["diagnosis"] = diagnosis
             state.phase = Phase.IDLE
@@ -131,7 +135,8 @@ class ProjectEvolutionOrchestrator:
             plans = self.planner.generate_plans(
                 problem,
                 state.context.get("diagnosis", {}),
-                state.context.get("investigation", {})
+                state.context.get("investigation", {}),
+                project_context=state.context
             )
             state.context["plans"] = [p.to_dict() for p in plans]
             state.phase = Phase.IDLE
@@ -251,18 +256,128 @@ class ProjectEvolutionOrchestrator:
         }
 
     def _create_state(self, project_id: str, problem: str):
-        """创建新的项目状态"""
+        """创建新的项目状态，加载项目配置文件作为上下文"""
         from core.models import ProjectState
+        from pathlib import Path
+
+        sm = self.bridge.get_state_manager()
+        projects_root = Path(sm.projects_root)
+        proj_dir = projects_root / project_id
+
+        # 加载项目配置文件
+        context = {"original_problem": problem}
+
+        # 读取 user-goals.md
+        goals_file = proj_dir / "user-goals.md"
+        if goals_file.exists():
+            try:
+                context["user_goals"] = goals_file.read_text(encoding="utf-8")
+            except Exception:
+                pass
+
+        # 读取 competitor-benchmarks.md
+        benchmarks_file = proj_dir / "competitor-benchmarks.md"
+        if benchmarks_file.exists():
+            try:
+                context["competitor_benchmarks"] = benchmarks_file.read_text(encoding="utf-8")
+            except Exception:
+                pass
+
+        # 读取 config.yaml
+        config_file = proj_dir / "config.yaml"
+        if config_file.exists():
+            try:
+                import yaml
+                with open(config_file, encoding="utf-8") as f:
+                    cfg = yaml.safe_load(f)
+                if cfg:
+                    context["project_config"] = cfg
+                    context["priorities"] = cfg.get("priorities", [])
+                    context["tech_stack"] = cfg.get("tech_stack", {})
+            except Exception:
+                pass
+
+        # 从 projects/index.json 读取项目基本信息
+        index_file = projects_root / "index.json"
+        if index_file.exists():
+            import json
+            try:
+                with open(index_file, encoding="utf-8") as f:
+                    idx = json.load(f)
+                for proj in idx.get("projects", []):
+                    if proj.get("id") == project_id:
+                        context["project_info"] = proj
+                        context["tech_stack"] = proj.get("tech_stack", context.get("tech_stack", {}))
+                        break
+            except Exception:
+                pass
+
         state = ProjectState(
             project_id=project_id,
             phase=Phase.IDLE,
             created_at=self._now(),
             updated_at=self._now(),
             current_task=problem,
-            context={"original_problem": problem}
+            context=context
         )
-        self.bridge.get_state_manager().save_state(project_id, state)
+        sm.save_state(project_id, state)
         return state
+
+    def _enrich_context(self, state) -> None:
+        """为已有 state 补充 config 上下文（如果缺失）"""
+        from pathlib import Path
+        import json
+
+        sm = self.bridge.get_state_manager()
+        projects_root = Path(sm.projects_root)
+        proj_dir = projects_root / state.project_id
+        ctx = state.context
+
+        # 读取 user-goals.md
+        if "user_goals" not in ctx:
+            goals_file = proj_dir / "user-goals.md"
+            if goals_file.exists():
+                try:
+                    ctx["user_goals"] = goals_file.read_text(encoding="utf-8")
+                except Exception:
+                    pass
+
+        # 读取 competitor-benchmarks.md
+        if "competitor_benchmarks" not in ctx:
+            benchmarks_file = proj_dir / "competitor-benchmarks.md"
+            if benchmarks_file.exists():
+                try:
+                    ctx["competitor_benchmarks"] = benchmarks_file.read_text(encoding="utf-8")
+                except Exception:
+                    pass
+
+        # 读取 config.yaml（始终重新加载，确保最新）
+        config_file = proj_dir / "config.yaml"
+        if config_file.exists():
+            try:
+                import yaml
+                with open(config_file, encoding="utf-8") as f:
+                    cfg = yaml.safe_load(f)
+                if cfg:
+                    ctx["project_config"] = cfg
+                    ctx["priorities"] = cfg.get("priorities", [])
+                    ctx["tech_stack"] = cfg.get("tech_stack", {})
+            except Exception:
+                pass
+
+        # 从 index.json 补 tech_stack
+        if "tech_stack" not in ctx or not ctx.get("tech_stack"):
+            index_file = projects_root / "index.json"
+            if index_file.exists():
+                try:
+                    with open(index_file, encoding="utf-8") as f:
+                        idx = json.load(f)
+                    for proj in idx.get("projects", []):
+                        if proj.get("id") == state.project_id:
+                            ctx["tech_stack"] = proj.get("tech_stack", {})
+                            break
+                except Exception:
+                    pass
 
     def _get_best_plan(self, plans_data: List[Dict]) -> Plan:
         """从评分中选择最优方案"""

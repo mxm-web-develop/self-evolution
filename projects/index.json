@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-03-25T09:39:57.471954",
-  "active_project_id": "pixgen",
+  "updated_at": "2026-03-26T09:30:40.916012",
+  "active_project_id": "mxmaiwebsite",
   "projects": [
     {
       "id": "pixgen",
@@ -36,6 +36,18 @@
       "status": "active",
       "created_at": "2026-03-25T09:37:49.377935",
       "last_active_at": "2026-03-25T09:37:49.377935",
+      "phase": "IDLE",
+      "onboarding_completed": true
+    },
+    {
+      "id": "mxmaiwebsite",
+      "name": "mxmaiwebsite",
+      "description": "个人网站/作品集，基于 React + TypeScript + Vite",
+      "path": "/Users/mxm_pro/.openclaw/workspace/mxmaiwebsite",
+      "type": "existing",
+      "status": "active",
+      "created_at": "2026-03-26T01:29:00",
+      "last_active_at": "2026-03-26T01:29:00",
       "phase": "IDLE",
       "onboarding_completed": true
     }
