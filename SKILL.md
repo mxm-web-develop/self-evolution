@@ -1,6 +1,6 @@
 ---
 name: self-evolution
-description: 项目自进化分析，从活跃项目出发的调研→诊断→规划→执行→学习闭环。当用户想分析、诊断、规划、优化一个项目时触发。
+description: Project self-evolution — investigation, diagnosis, planning, execution and learning loop for active projects. Triggers when the user wants to analyze, diagnose, plan, optimize, research, or check on a project.
 ---
 
 # self-evolution
