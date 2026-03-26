@@ -1,7 +1,7 @@
 """
 新项目初始化器
 输入：项目目标、项目名、对标产品、优先级、自动化边界
-输出：projects/{project-id}/ 下生成 profile.md, user-goals.md 等文件
+输出：projects/{project-id}/ 下生成 profile.md、state.json、config.yaml 与 analysis/ 目录
 """
 
 import json
@@ -88,22 +88,15 @@ class NewProjectInitializer:
         with open(project_dir / "state.json", "w", encoding="utf-8") as f:
             json.dump(state_data, f, indent=2, ensure_ascii=False)
 
-        # 2. profile.md
+        # 2. profile.md（整合项目画像 + 用户目标 + 竞品参考）
         profile_md = templates.build_profile_md(session, ctx)
-        with open(project_dir / "profile.md", "w", encoding="utf-8") as f:
-            f.write(profile_md)
-
-        # 3. user-goals.md
         goals_md = templates.build_user_goals_md(session)
-        with open(project_dir / "user-goals.md", "w", encoding="utf-8") as f:
-            f.write(goals_md)
-
-        # 4. competitor-benchmarks.md
         benchmarks_md = templates.build_competitor_benchmarks_md(session)
-        with open(project_dir / "competitor-benchmarks.md", "w", encoding="utf-8") as f:
-            f.write(benchmarks_md)
+        merged_profile = profile_md.rstrip() + "\n\n## 用户目标\n\n" + goals_md.strip() + "\n\n## 竞品/标杆参考\n\n" + benchmarks_md.strip() + "\n"
+        with open(project_dir / "profile.md", "w", encoding="utf-8") as f:
+            f.write(merged_profile)
 
-        # 5. optimization-roadmap.md
+        # 3. optimization-roadmap.md
         roadmap_md = templates.build_optimization_roadmap_md(session)
         with open(project_dir / "optimization-roadmap.md", "w", encoding="utf-8") as f:
             f.write(roadmap_md)

@@ -18,6 +18,7 @@ class Planner:
         project_context: Optional[Dict[str, Any]] = None,
     ) -> List[Plan]:
         project_context = project_context or {}
+        self.project_type_memory_ref = self._resolve_project_type_memory(project_context)
         dims = self._extract_gap_dims(diagnosis)
         plans = [
             self._generate_plan_for_dim(problem, dim, diagnosis, investigation, project_context)
@@ -55,6 +56,7 @@ class Planner:
                 f"- 问题背景：{problem[:120]}\n"
                 f"- 当前现状：{dim.get('current_state', '未知')}\n"
                 f"- 成熟标准：{dim.get('mature_standard', '未知')}"
+                + (f"\n- 历史经验参考：参考了 {self.project_type_memory_ref} 项目的历史经验" if getattr(self, "project_type_memory_ref", "") else "")
             ),
             pros=[
                 "直接对应本轮最大差距维度",
@@ -92,13 +94,34 @@ class Planner:
         }
         return sorted(plans, key=lambda p: gap_map.get(p.target_dimension, 0), reverse=True)
 
+
+    def _resolve_project_type_memory(self, context: Dict[str, Any]) -> str:
+        project_type = str((context.get("project_info") or {}).get("type") or "").strip().lower()
+        if not project_type:
+            return ""
+        mapping = {
+            "website": "website.md",
+            "site": "website.md",
+            "api": "api-service.md",
+            "api-service": "api-service.md",
+            "service": "api-service.md",
+            "ai": "ai-ml.md",
+            "ml": "ai-ml.md",
+            "ai-ml": "ai-ml.md",
+        }
+        filename = mapping.get(project_type)
+        if not filename:
+            return ""
+        return filename
+
     def _extra_actions(self, dimension: str, context: Dict[str, Any], investigation: Dict[str, Any]) -> List[str]:
         goal_text = str(context.get("user_goals", ""))
         actions = []
         if "联系方式" in goal_text or "合作" in goal_text:
-            actions.append("检查页面中合作入口和联系方式的显著性")
-        if "React" in goal_text or "Vite" in json.dumps(context.get("tech_stack", {}), ensure_ascii=False):
-            actions.append("结合当前 React/Vite 结构落地最小可执行改动")
+            actions.append("检查关键转化入口和联系路径的显著性")
+        tech_stack_text = json.dumps(context.get("tech_stack", {}), ensure_ascii=False).lower()
+        if "react" in goal_text.lower() or "vite" in tech_stack_text:
+            actions.append("结合当前工程结构落地最小可执行改动")
         web_titles = [w.get("title", "") for w in investigation.get("web_findings", [])[:2] if w.get("title")]
         for title in web_titles:
             actions.append(f"参考外部案例《{title}》提炼可迁移做法")

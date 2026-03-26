@@ -291,7 +291,7 @@ class ExistingProjectInitializer:
         with open(project_dir / "state.json", "w", encoding="utf-8") as f:
             json.dump(state_data, f, indent=2, ensure_ascii=False)
 
-        # profile.md
+        # profile.md（整合项目画像 + 用户目标 + 竞品参考）
         profile_md = templates.build_profile_md(session, {
             "lang": ", ".join(scan_result["tech_stack"].get("languages", [])),
             "framework": ", ".join(scan_result["tech_stack"].get("frameworks", [])),
@@ -299,18 +299,11 @@ class ExistingProjectInitializer:
             "test_framework": scan_result["tech_stack"].get("test_framework", ""),
             "ci_cd": "✅" if scan_result["tech_stack"].get("has_ci") else "❌",
         })
-        with open(project_dir / "profile.md", "w", encoding="utf-8") as f:
-            f.write(profile_md)
-
-        # user-goals.md
         goals_md = templates.build_user_goals_md(session)
-        with open(project_dir / "user-goals.md", "w", encoding="utf-8") as f:
-            f.write(goals_md)
-
-        # competitor-benchmarks.md
         benchmarks_md = templates.build_competitor_benchmarks_md(session)
-        with open(project_dir / "competitor-benchmarks.md", "w", encoding="utf-8") as f:
-            f.write(benchmarks_md)
+        merged_profile = profile_md.rstrip() + "\n\n## 用户目标\n\n" + goals_md.strip() + "\n\n## 竞品/标杆参考\n\n" + benchmarks_md.strip() + "\n"
+        with open(project_dir / "profile.md", "w", encoding="utf-8") as f:
+            f.write(merged_profile)
 
         # optimization-roadmap.md
         roadmap_md = templates.build_optimization_roadmap_md(session)
@@ -390,5 +383,5 @@ class ExistingProjectInitializer:
 2. 对标竞品
 3. 优化优先级
 
-这些信息可通过编辑 `user-goals.md` 或运行 `/evolve` 补充。
+这些信息可通过编辑 `profile.md` 或运行 `/evolve` 补充。
 """

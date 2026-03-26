@@ -147,12 +147,12 @@ class ProjectEvolutionOrchestrator:
             state.context["maturity_assessment"] = self._assess_project_maturity(state.context)
 
     def _load_project_files_into_context(self, proj_dir: Path, projects_root: Path, project_id: str, context: Dict[str, Any]) -> None:
-        goals_file = proj_dir / "user-goals.md"
-        if goals_file.exists():
-            context["user_goals"] = goals_file.read_text(encoding="utf-8")
-        benchmarks_file = proj_dir / "competitor-benchmarks.md"
-        if benchmarks_file.exists():
-            context["competitor_benchmarks"] = benchmarks_file.read_text(encoding="utf-8")
+        profile_file = proj_dir / "profile.md"
+        if profile_file.exists():
+            profile_text = profile_file.read_text(encoding="utf-8")
+            context["project_profile"] = profile_text
+            context["user_goals"] = profile_text
+            context["competitor_benchmarks"] = profile_text
         config_file = proj_dir / "config.yaml"
         if config_file.exists():
             try:
@@ -200,7 +200,7 @@ class ProjectEvolutionOrchestrator:
         return {"stage": stage, "label": label, "score": score, "reasoning": reasons}
 
     def _analysis_history_file(self, project_id: str) -> Path:
-        return Path(self.bridge.projects_root) / project_id / "analysis_history.md"
+        return Path(self.bridge.projects_root) / project_id / "analysis" / "outcomes" / "analysis_history.md"
 
     def _load_analysis_history(self, project_id: str) -> str:
         file = self._analysis_history_file(project_id)

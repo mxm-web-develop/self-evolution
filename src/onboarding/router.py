@@ -168,8 +168,8 @@ class OnboardingRouter:
         # 检查项目配置完善度
         def check_config(project_id: str) -> str:
             proj_dir = self.index.base_path / "projects" / project_id
-            goals = (proj_dir / "user-goals.md").exists()
-            benchmarks = (proj_dir / "competitor-benchmarks.md").exists()
+            goals = (proj_dir / "profile.md").exists()
+            benchmarks = (proj_dir / "profile.md").exists()
             config = (proj_dir / "config.yaml").exists()
             if goals and benchmarks and config:
                 return "🎯"   # 完整配置

@@ -378,7 +378,7 @@ class EvolveChatFlow:
 
         if not problem:
             health_report = self.base_path / "projects" / project_id / "health-report.md"
-            inv_report = self.base_path / "projects" / project_id / "investigation.md"
+            inv_report = self.base_path / "projects" / project_id / "analysis" / "investigation.md"
             if not health_report.exists() and not inv_report.exists():
                 return (
                     f"📐 好，要为项目「{project_name}」生成方案。\n\n"
@@ -449,7 +449,7 @@ class EvolveChatFlow:
             )
 
         if not plan_id:
-            plans_dir = self.base_path / "projects" / project_id / "plans"
+            plans_dir = self.base_path / "projects" / project_id / "analysis" / "plans"
             if plans_dir.exists():
                 existing = sorted(plans_dir.glob("plan-*.md"))
                 if existing:
@@ -457,7 +457,7 @@ class EvolveChatFlow:
         if not plan_id:
             return "❌ 没有找到可执行的方案。请先说「生成方案」或「帮我规划」。"
 
-        plan_file = self.base_path / "projects" / project_id / "plans" / f"{plan_id}.md"
+        plan_file = self.base_path / "projects" / project_id / "analysis" / "plans" / f"{plan_id}.md"
         if not plan_file.exists():
             return f"❌ 找不到方案 `{plan_id}`。"
 
@@ -531,7 +531,7 @@ class EvolveChatFlow:
         if plans:
             lines.append("## 📋 候选方案\n")
             lines.append(f"已生成 **{len(plans)}** 个候选方案：\n")
-            plans_dir = self.base_path / "projects" / results.get("project_id", "") / "plans"
+            plans_dir = self.base_path / "projects" / results.get("project_id", "") / "analysis" / "plans"
             for i, plan_id in enumerate(plans, 1):
                 plan_file = plans_dir / f"{plan_id}.md"
                 label = chr(ord('A') + i - 1)
@@ -555,6 +555,7 @@ class EvolveChatFlow:
         lines.append("")
         lines.append("---")
         lines.append(f"✅ 已完成阶段：{' → '.join(phases)}")
+        lines.append("本轮洞察已存入 memory/insights/")
         return "\n".join(lines)
 
     def _view_plan(self, plan_id: str) -> str:
@@ -562,7 +563,7 @@ class EvolveChatFlow:
         if not active:
             return "❌ 当前没有活跃项目。"
         project_id = active["id"]
-        plan_file = self.base_path / "projects" / project_id / "plans" / f"{plan_id}.md"
+        plan_file = self.base_path / "projects" / project_id / "analysis" / "plans" / f"{plan_id}.md"
         if not plan_file.exists():
             return f"❌ 找不到方案 `{plan_id}`，可能尚未生成或已被清理。"
         content = plan_file.read_text(encoding="utf-8")
@@ -574,7 +575,7 @@ class EvolveChatFlow:
         active = self.router.get_active_project()
         if not active:
             return None
-        plans_dir = self.base_path / "projects" / active["id"] / "plans"
+        plans_dir = self.base_path / "projects" / active["id"] / "analysis" / "plans"
         if not plans_dir.exists():
             return None
         files = sorted(plans_dir.glob("plan-*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -587,7 +588,7 @@ class EvolveChatFlow:
         return files[idx].stem
 
     def _load_plan_as_dict(self, project_id: str, plan_id: str) -> Optional[Dict[str, Any]]:
-        plan_file = self.base_path / "projects" / project_id / "plans" / f"{plan_id}.md"
+        plan_file = self.base_path / "projects" / project_id / "analysis" / "plans" / f"{plan_id}.md"
         if not plan_file.exists():
             return None
         content = plan_file.read_text(encoding="utf-8")

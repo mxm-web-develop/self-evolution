@@ -81,8 +81,8 @@ def cmd_new(router: OnboardingRouter, args):
    已生成文件：
      projects/{session.project_id}/
        ├── profile.md
-       ├── user-goals.md
-       ├── competitor-benchmarks.md
+       ├── profile.md
+       ├── profile.md
        ├── optimization-roadmap.md
        ├── state.json
        └── config.yaml
@@ -111,8 +111,8 @@ def cmd_existing(router: OnboardingRouter, args):
    已生成文件：
      projects/{session.project_id}/
        ├── profile.md
-       ├── user-goals.md
-       ├── competitor-benchmarks.md
+       ├── profile.md
+       ├── profile.md
        ├── optimization-roadmap.md
        ├── state.json
        ├── config.yaml

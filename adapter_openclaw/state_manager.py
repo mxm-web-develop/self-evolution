@@ -54,7 +54,7 @@ class StateManager:
         return None
 
     def save_plan(self, project_id: str, plan: Plan) -> None:
-        plans_dir = self.projects_root / project_id / "plans"
+        plans_dir = self.projects_root / project_id / "analysis" / "plans"
         plans_dir.mkdir(parents=True, exist_ok=True)
 
         plan_file = plans_dir / f"{plan.plan_id}.md"
@@ -62,7 +62,7 @@ class StateManager:
             f.write(self._plan_to_md(plan))
 
     def save_investigation(self, project_id: str, investigation: dict) -> None:
-        inv_file = self.projects_root / project_id / "investigation.md"
+        inv_file = self.projects_root / project_id / "analysis" / "investigation.md"
         inv_file.parent.mkdir(parents=True, exist_ok=True)
 
         lines = [f"# 调研报告：{project_id}\n\n"]
