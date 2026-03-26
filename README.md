@@ -1,405 +1,160 @@
-# Self-Evolution / 项目进化助手
+# Self-Evolution 项目进化助手
 
-> An OpenClaw-first self-evolution system that helps analyze, diagnose, plan, score, approve, execute, and learn from product/project improvements.
->
-> 一个 **OpenClaw-first** 的项目进化（自进化）系统，用于帮助项目完成：**调研 → 诊断 → 方案 → 评分 → 审批 → 执行 → 学习回写** 的完整闭环。
+帮助项目完成 **调研 → 诊断 → 规划 → 执行 → 学习** 完整闭环的智能体。
 
 ---
 
-## English
+## 用户快速上手
 
-### What is this?
+### 第一步：告诉我想分析什么项目
 
-**Self-Evolution** is a lightweight project optimization and self-improvement framework.
+直接说项目名字，不需要记任何命令：
 
-It is designed to:
-- research a problem or opportunity
-- diagnose the root cause or project type
-- generate multiple solution plans
-- score plans from business / UX / technical perspectives
-- ask for human approval before execution
-- execute selected work through OpenClaw-compatible workflows
-- write learnings back into a local case library
+```
+优化一下 mxmaiwebsite
+帮我看看 supermxmai 这个项目
+跟进一下 pixgen
+```
 
-The current version is built **for OpenClaw first**, while keeping a structure that can later evolve into:
-- a generic core layer
-- multiple platform adapters
+**我会做：**
+1. 扫描 workspace 找到匹配的项目
+2. 问你"你说的是 xxx 这个项目吗？"确认
+3. 检查有没有这个项目的记录
 
-### Core Features
+---
 
-- **OpenClaw-first architecture**
-  - built to work inside OpenClaw first
-  - later extractable into a generic Core + Adapter system
+### 第二步：补充项目信息（首次接入）
 
-- **Three-dimensional optimization model**
-  - Business optimization
-  - Interaction / UX optimization
-  - Functional / engineering optimization
+如果是新项目或者信息不完整，我会基于代码扫描结果问你几个具体问题：
 
-- **Closed-loop workflow**
-  - Investigation
-  - Diagnosis
-  - Planning
-  - Critique / scoring
-  - Human approval
-  - Execution
-  - Learning
+```
+我看你的网站用了 React + Vite，
+英雄区目前写着 'Full-stack Developer'。
+1. 你希望访客第一眼就理解你做什么吗？还是更希望展示作品？
+2. 目前有狐狸吉祥物，你希望继续强化还是弱化？
+3. 你觉得现在的页面加载速度怎么样？
+```
 
-- **Search provider abstraction**
-  - default: **Tavily**
-  - supported alternatives: **Brave**, **DuckDuckGo**
-  - fallback strategy supported
+每个问题都基于代码实际情况，不是泛泛而谈。回答完我整理成项目画像。
 
-- **Case library**
-  - stores successful and failed project cases
-  - reusable for future diagnosis and planning
+---
 
-- **OpenClaw adapter layer**
-  - task execution
-  - state management
-  - scheduling
-  - notification
-  - orchestration
+### 第三步：我做调研和诊断
 
-### Directory Structure
+我会：
+- 扫描你的代码结构
+- 搜索同类成熟项目的做法
+- 分析你的项目当前成熟度
+- 找出最需要优先改进的地方
 
-```text
+输出是一份清晰的分析报告：
+
+```
+项目成熟度：相对成熟
+
+最需要改进的地方（按优先级排序）：
+1. 品牌表达与定位清晰度（gap: 高）
+2. 视觉系统与一致性（gap: 高）
+3. 性能与加载质量（gap: 高）
+4. 交互反馈与浏览流畅度（gap: 中高）
+...
+```
+
+---
+
+### 第四步：我给你多个方案选择
+
+每个需要改进的方向生成一个方案，包含：
+- 现状是什么
+- 成熟的标准是什么
+- 具体要做什么（行动清单）
+
+```
+📋 方案A：品牌表达与定位清晰度
+  现状：品牌碎片化，访客不清楚你的定位
+  目标：访客5秒内理解你做什么、为什么值得信任
+  行动：
+  • 重写首屏价值主张
+  • 明确代表作和能力标签
+  • 补齐合作入口
+```
+
+---
+
+### 第五步：你批准，我执行
+
+```
+批准方案A
+```
+
+你确认后我开始执行，完成后把结果写回项目记录。
+
+---
+
+### 第六步：自动沉淀经验
+
+每轮结束后，这次分析学到的洞察会写入记忆库：
+- 哪些方向改进效果最好
+- 哪些做法在同类项目里有效
+
+下次分析新项目时可以参考，不用从零开始。
+
+---
+
+## 完整命令示例
+
+| 你说 | 我做 |
+|------|------|
+| `优化一下 mxmaiwebsite` | 识别项目 → 确认 → 开始分析 |
+| `跟进一下 pixgen` | 识别项目 → 检查记录 → 继续 |
+| `做一个 AI 写作后端项目` | 新建项目 → onboarding → 开始 |
+| `看看我有哪些项目` | 列出所有项目及状态 |
+| `批准方案B` | 执行方案B |
+| `先不执行，说说还有什么要改的` | 继续分析 |
+
+---
+
+## 目录结构
+
+```
 self-evolution/
-├── core/                 # generic business logic layer
-├── adapter_openclaw/     # OpenClaw adapter layer
-├── providers/            # search providers (Tavily / Brave / DuckDuckGo)
-├── docs/                 # architecture, MVP, manual, guides
-├── projects/             # per-project working state
-├── cases/                # learned cases and examples
-├── scripts/              # bootstrap and verification scripts
-└── skills/               # OpenClaw skill definition
+├── memory/                    # 跨项目共享记忆
+│   ├── insights/             # 通用洞察
+│   ├── project-types/         # 按项目类型积累的经验
+│   └── sessions/              # 每轮分析历史
+├── projects/                  # 项目隔离数据
+│   └── {project-id}/
+│       ├── profile.md         # 项目画像（代码扫描+onboarding）
+│       ├── config.yaml        # 配置文件
+│       ├── state.json         # 运行状态
+│       └── analysis/          # 分析产物
+│           ├── investigation.md
+│           ├── gaps.md
+│           ├── plans/
+│           └── outcomes/
+├── scripts/                  # 可执行脚本
+├── references/                # 推理框架 prompt 模板
+└── SKILL.md                  # OpenClaw Skill 入口
 ```
-
-### Quick Start
-
-```bash
-cd /Users/mxm_pro/.openclaw/workspace/self-evolution
-chmod +x scripts/bootstrap.sh
-./scripts/bootstrap.sh duckduckgo
-```
-
-This script will automatically:
-1. create a Python virtual environment
-2. install dependencies
-3. generate `.env` files
-4. run a verification test
-
-### Manual Installation
-
-```bash
-cd /Users/mxm_pro/.openclaw/workspace/self-evolution
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python scripts/verify_install.py duckduckgo
-```
-
-### Search Providers
-
-| Provider | Type | Cost | Notes |
-|---|---|---:|---|
-| Tavily | API | Paid / low-cost | Best default for AI-oriented search |
-| Brave | API | Paid / low-cost | Good quality and privacy-friendly |
-| DuckDuckGo | community/free | Free | Good fallback / free option |
-
-### Main Documents
-
-- `docs/openclaw-mvp.md` — OpenClaw-first MVP design
-- `docs/search-provider-design.md` — search provider strategy
-- `docs/code-architecture-guide.md` — developer architecture guide
-- `docs/user-manual.md` — user installation and usage guide
-- `docs/roadmap.md` — roadmap and milestones
-
-### Current Status
-
-Current repository status:
-- architecture docs completed
-- OpenClaw-first MVP documented
-- bootstrap automation added
-- search providers scaffolded
-- integrated with `money-machine` for first round validation
-
-### Next Steps
-
-- connect the orchestrator to actual OpenClaw command flows
-- improve provider reliability and fallback quality
-- make `money-machine` use Self-Evolution for real optimization reports
-- continue extracting a generic core after OpenClaw validation succeeds
 
 ---
 
-## 中文
+## 常见问题
 
-### 这是什么？
+**Q：需要我每次都说 `/evolve xxx` 吗？**
+不需要。直接说你想做什么就行，比如"帮我看看 mxmaiwebsite"。
 
-**项目进化助手（Self-Evolution）** 是一个轻量级的项目优化与自进化框架。
+**Q：我有多个项目，可以同时跟进吗？**
+可以。我会记住每个项目的状态和历史，下次说项目名字就能继续。
 
-它用来帮助项目完成以下流程：
-- 对问题或机会进行调研
-- 诊断问题类型和根因
-- 生成多个候选方案
-- 从 **业务 / 交互 / 技术** 三个维度评分
-- 在执行前要求人工审批
-- 通过 OpenClaw 工作流执行方案
-- 将结果回写到本地案例库，形成可复用经验
+**Q：我的项目在 GitHub 上，怎么接入？**
+告诉我就行，比如"帮我接入 GitHub 上的 mxm-web-develop/someproject"，我会扫描项目结构来了解它。
 
-当前版本优先面向 **OpenClaw 落地**，同时保留未来演进为：
-- 通用 Core 层
-- 多平台 Adapter 层
-
-### 核心功能
-
-- **OpenClaw-first 架构**
-  - 当前优先在 OpenClaw 中可用
-  - 后续再抽离成通用 Core + Adapter 双层结构
-
-- **三维优化模型**
-  - 业务优化
-  - 交互 / 用户体验优化
-  - 功能 / 工程优化
-
-- **完整闭环流程**
-  - 调研
-  - 诊断
-  - 方案生成
-  - 评分
-  - 人工审批
-  - 执行
-  - 学习回写
-
-- **搜索 Provider 抽象**
-  - 默认：**Tavily**
-  - 兼容：**Brave**、**DuckDuckGo**
-  - 支持 fallback 策略
-
-- **案例库机制**
-  - 记录成功和失败案例
-  - 为后续调研、诊断、规划提供参考
-
-- **OpenClaw 适配层**
-  - 任务执行
-  - 状态管理
-  - 调度
-  - 通知
-  - 流程编排
-
-### 目录结构
-
-```text
-self-evolution/
-├── core/                 # 通用业务逻辑层
-├── adapter_openclaw/     # OpenClaw 适配层
-├── providers/            # 搜索 Provider（Tavily / Brave / DuckDuckGo）
-├── docs/                 # 架构、MVP、手册、说明文档
-├── projects/             # 每个项目的运行状态
-├── cases/                # 已学习的案例库
-├── scripts/              # 安装与验证脚本
-└── skills/               # OpenClaw Skill 定义
-```
-
-### 快速开始
-
-```bash
-cd /Users/mxm_pro/.openclaw/workspace/self-evolution
-chmod +x scripts/bootstrap.sh
-./scripts/bootstrap.sh duckduckgo
-```
-
-这个脚本会自动完成：
-1. 创建 Python 虚拟环境
-2. 安装依赖
-3. 生成 `.env` 文件
-4. 执行安装验证
-
-### 手动安装
-
-```bash
-cd /Users/mxm_pro/.openclaw/workspace/self-evolution
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python scripts/verify_install.py duckduckgo
-```
-
-### 搜索 Provider 说明
-
-| Provider | 类型 | 成本 | 说明 |
-|---|---|---:|---|
-| Tavily | API | 付费 / 低成本 | AI 搜索友好，推荐默认使用 |
-| Brave | API | 付费 / 低成本 | 质量稳定，偏隐私友好 |
-| DuckDuckGo | 社区 / 免费 | 免费 | 适合 fallback 或低成本验证 |
-
-### 主要文档
-
-- `docs/openclaw-mvp.md` — OpenClaw-first MVP 方案
-- `docs/search-provider-design.md` — 搜索 Provider 设计
-- `docs/code-architecture-guide.md` — 面向开发者的代码架构指南
-- `docs/user-manual.md` — 面向用户的安装与使用手册
-- `docs/roadmap.md` — 路线图与阶段目标
-
-### 当前状态
-
-当前仓库已经完成：
-- 架构文档
-- OpenClaw-first MVP 文档
-- 自动安装脚本
-- 搜索 Provider 骨架
-- 与 `money-machine` 的第一轮接入验证
-
-### 下一步
-
-- 把 orchestrator 接入真实 OpenClaw 调用链
-- 提升 provider 可靠性和 fallback 效果
-- 让 `money-machine` 真正使用 Self-Evolution 生成优化报告
-- 在 OpenClaw 验证成功后，再逐步抽离通用 Core
+**Q：完全从零开始可以吗？**
+可以。告诉我你想做什么项目，我会先问几个关键问题来了解你的目标，再开始分析。
 
 ---
 
-## Repository
+## 项目发起人
 
-GitHub: <https://github.com/mxm-web-develop/self-evolution>
-
-## License / 许可
-
-Currently internal / in active development.
-
----
-
-## 🚀 Onboarding 模块（Beta）
-
-项目初始化和接入模块，支持新项目和已有项目的快速接入。
-
-### CLI 快速使用
-
-```bash
-cd /Users/mxm_pro/.openclaw/workspace/self-evolution
-
-# 列出所有项目
-PYTHONPATH=. python3 -m src.onboarding.cli --list
-
-# 查看当前活跃项目
-PYTHONPATH=. python3 -m src.onboarding.cli --active
-
-# 初始化新项目
-PYTHONPATH=. python3 -m src.onboarding.cli --new \
-  --goal "做一个 AI 图片生成 SaaS" \
-  --name "PixGen" \
-  --benchmarks "Midjourney,Leonardo.ai" \
-  --priorities "performance:0.4,conversion:0.3" \
-  --automation-boundaries "cost_approval,external_release"
-
-# 接入已有项目
-PYTHONPATH=. python3 -m src.onboarding.cli --existing /path/to/project
-
-# 仅扫描（不写入）
-PYTHONPATH=. python3 -m src.onboarding.cli --scan /path/to/project
-
-# 切换活跃项目
-PYTHONPATH=. python3 -m src.onboarding.cli --switch pixgen
-```
-
-### Python 代码使用
-
-```python
-import sys
-sys.path.insert(0, '/path/to/self-evolution')
-
-from src.onboarding import OnboardingRouter
-
-router = OnboardingRouter('/path/to/self-evolution')
-
-# 初始化新项目
-session = router.init_new_project(
-    goal="做一个 AI 图片生成 SaaS",
-    name="PixGen",
-    benchmarks=["Midjourney", "Leonardo.ai"],
-    priorities=[
-        {"dimension": "performance", "weight": 0.4, "reason": "用户关心速度"},
-        {"dimension": "conversion", "weight": 0.3, "reason": "提升转化"},
-    ],
-    automation_boundaries=["cost_approval"],
-)
-
-# 接入已有项目
-session, scan = router.init_existing_project("/path/to/existing/project")
-
-# 列出 / 切换项目
-router.list_projects()
-router.switch_project("pixgen")
-router.get_active_project()
-```
-
-### 生成的文件
-
-每个项目在 `projects/{project-id}/` 下生成：
-
-| 文件 | 说明 |
-|---|---|
-| `profile.md` | 项目画像 |
-| `user-goals.md` | 用户目标文档 |
-| `competitor-benchmarks.md` | 竞品分析 |
-| `optimization-roadmap.md` | 优化路线图 |
-| `state.json` | 运行时状态 |
-| `config.yaml` | 项目配置 |
-| `health-report.md` | 健康度报告（仅已有项目） |
-
-### /evolve 对话式入口（Beta）
-
-现在已经提供两个入口：
-
-#### 1) 低层命令入口（保留）
-
-```bash
-cd /Users/mxm_pro/.openclaw/workspace/self-evolution
-python3 scripts/evolve_chat.py "/evolve"
-python3 scripts/evolve_chat.py "/evolve status"
-python3 scripts/evolve_chat.py "/evolve new AI 写作工作流平台"
-```
-
-#### 2) OpenClaw Skill 统一入口（推荐）
-
-```bash
-cd /Users/mxm_pro/.openclaw/workspace/self-evolution
-python3 scripts/evolve_skill.py "/evolve status"
-python3 scripts/evolve_skill.py "看看我有哪些项目"
-python3 scripts/evolve_skill.py "切换到 pixgen"
-python3 scripts/evolve_skill.py "帮我新建一个项目：AI 写作工作流平台"
-```
-
-`scripts/evolve_skill.py` 会先做中英双语自然语言归一化，再统一转给 `EvolveChatFlow`。
-
-它会在 `runtime/evolve-chat-state.json` 中维护当前 onboarding 对话状态。
-
-### Demo 脚本
-
-```bash
-PYTHONPATH=. python3 scripts/demo_onboarding.py
-```
-
-### 当前进度
-
-✅ 已完成：
-- 项目索引管理（projects/index.json）
-- OnboardingSession / OnboardingState 数据结构
-- 新项目初始化器（完整）
-- 已有项目初始化器（扫描部分）
-- 统一入口 OnboardingRouter
-- CLI（完整）
-- Demo 脚本
-- `scripts/evolve_skill.py` OpenClaw Skill 统一入口
-- 中英双语自然语言意图归一化（项目列表 / 活跃项目 / 切换 / 新建 / 接入已有项目）
-- `skills/self-evolution/SKILL.md`
-- `docs/openclaw-skill-manual.md` 使用说明书
-
-⏳ 本轮未完成（待后续迭代）：
-- 完整自由语义理解（当前是规则驱动）
-- 多轮对话真正接入 OpenClaw message 回路
-- 复杂项目结构深度扫描（多语言混合项目）
-- 调研 → 诊断 → 方案 → 审批 → 执行 全闭环 skill 化
-
-当前处于内部开发与快速迭代阶段，但已具备 OpenClaw Skill Beta 形态。
+张瀚峰（mxmai）
