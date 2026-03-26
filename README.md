@@ -4,11 +4,49 @@
 
 ---
 
-## 用户快速上手
+## 安装
 
-### 第一步：告诉我想分析什么项目
+### 第一步：下载
 
-直接说项目名字，不需要记任何命令：
+**方式一：Git clone**
+```bash
+cd ~/.openclaw/skills
+git clone https://github.com/mxm-web-develop/self-evolution.git
+```
+
+**方式二：从 GitHub 下载 ZIP**
+在 [GitHub 仓库](https://github.com/mxm-web-develop/self-evolution) 下载 ZIP，解压到 `~/.openclaw/skills/self-evolution/`
+
+### 第二步：放到正确位置
+
+OpenClaw skill 搜索三个位置（按优先级）：
+
+| 位置 | 说明 | 命令 |
+|------|------|------|
+| `~/.openclaw/workspace/skills/` | 仅当前 workspace 可见 | `mkdir -p ~/.openclaw/workspace/skills` |
+| `~/.openclaw/skills/` | 所有 agent 共享 | `mkdir -p ~/.openclaw/skills` |
+| 内置 bundled skills | OpenClaw 内置 | 无需操作 |
+
+**推荐放到 `~/.openclaw/skills/`**（共享位置，任何 workspace 都能用）：
+
+```bash
+# 把下载的 self-evolution 放到 ~/.openclaw/skills/
+mv self-evolution ~/.openclaw/skills/
+```
+
+验证是否安装成功：
+```
+告诉我你有哪些项目
+```
+（我会识别并加载 self-evolution skill）
+
+---
+
+## 快速开始
+
+### 第一步：告诉我项目名字
+
+不需要记任何命令，直接说你想做什么：
 
 ```
 优化一下 mxmaiwebsite
@@ -23,7 +61,7 @@
 
 ---
 
-### 第二步：补充项目信息（首次接入）
+### 第二步：回答我的问题（首次接入）
 
 如果是新项目或者信息不完整，我会基于代码扫描结果问你几个具体问题：
 
@@ -101,7 +139,7 @@
 
 ---
 
-## 完整命令示例
+## 完整对话示例
 
 | 你说 | 我做 |
 |------|------|
@@ -114,28 +152,46 @@
 
 ---
 
-## 目录结构
+## 技术细节
+
+### 目录结构
 
 ```
-self-evolution/
+~/.openclaw/skills/self-evolution/
+├── SKILL.md                  # OpenClaw Skill 入口
+├── README.md                 # 本文件
 ├── memory/                    # 跨项目共享记忆
 │   ├── insights/             # 通用洞察
 │   ├── project-types/         # 按项目类型积累的经验
 │   └── sessions/              # 每轮分析历史
 ├── projects/                  # 项目隔离数据
 │   └── {project-id}/
-│       ├── profile.md         # 项目画像（代码扫描+onboarding）
+│       ├── profile.md         # 项目画像
 │       ├── config.yaml        # 配置文件
 │       ├── state.json         # 运行状态
-│       └── analysis/          # 分析产物
+│       └── analysis/
 │           ├── investigation.md
 │           ├── gaps.md
 │           ├── plans/
 │           └── outcomes/
 ├── scripts/                  # 可执行脚本
-├── references/                # 推理框架 prompt 模板
-└── SKILL.md                  # OpenClaw Skill 入口
+└── references/               # 推理框架 prompt 模板
 ```
+
+### Skill 触发原理
+
+OpenClaw 会自动扫描 `~/.openclaw/skills/` 下的所有目录，加载每个目录里的 `SKILL.md`。
+
+SKILL.md 里的 `description` 字段决定了什么时候触发：
+
+```yaml
+---
+name: self-evolution
+description: 项目自进化分析...当用户想分析、诊断、规划、优化一个项目时触发。
+---
+```
+
+当你说出"分析"、"优化"、"调研"、"跟进"等关键词时，OpenClaw 会自动加载 self-evolution skill。
 
 ---
 
@@ -152,6 +208,9 @@ self-evolution/
 
 **Q：完全从零开始可以吗？**
 可以。告诉我你想做什么项目，我会先问几个关键问题来了解你的目标，再开始分析。
+
+**Q：skill 安装后没反应怎么办？**
+在 OpenClaw 对话里说"刷新 skills"或"reload skills"，或者重启 OpenClaw gateway。
 
 ---
 
