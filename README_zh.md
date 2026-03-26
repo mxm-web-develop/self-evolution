@@ -39,7 +39,6 @@ mv self-evolution ~/.openclaw/skills/
 ```
 告诉我有哪些项目
 ```
-（我会识别并加载 self-evolution skill）
 
 ---
 
