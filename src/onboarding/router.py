@@ -178,17 +178,19 @@ class OnboardingRouter:
             else:
                 return "⬜"   # 仅有基本扫描
 
-        lines = ["📋 项目列表\n"]
+        lines = [
+            "📋 项目列表\n",
+            "| 状态 | ID | 名称 | 类型 | 阶段 | Onboarding |",
+            "|------|-----|------|------|------|------------|",
+        ]
         for p in projects:
             marker = "👉" if p["id"] == active_id else "  "
             cfg = check_config(p["id"])
+            cfg_label = {"🎯": "✅完整", "🔧": "⚠️部分", "⬜": "⬜未完成"}[cfg]
             lines.append(
-                f"{marker}{cfg} [{p['id']}] {p['name']}"
-                f"  ({p.get('type', '?')})"
-                f"  phase={p.get('phase', '?')}"
+                f"| {marker} | `{p['id']}` | {p['name']} |"
+                f" {p.get('type', '?')} | {p.get('phase', '?')} | {cfg_label} |"
             )
-        lines.append("")
-        lines.append("图例：🎯完整配置  🔧部分配置  ⬜仅有基本扫描")
         return "\n".join(lines)
 
     def _format_help(self) -> str:
