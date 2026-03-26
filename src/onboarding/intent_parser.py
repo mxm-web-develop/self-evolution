@@ -253,6 +253,11 @@ class EvolveIntentParser:
     def _extract_plan_problem(self, text: str) -> Optional[str]:
         """从规划意图文本中提取问题/目标描述（可选）。"""
         text = text.strip()
+        # 先处理 /evolve plan 前缀
+        if text.lower().startswith("/evolve plan"):
+            rest = text[len("/evolve plan"):].strip("：: ").strip()
+            return rest if rest else None
+        
         prefixes = sorted([
             "帮我规划", "生成方案", "制定方案", "规划方案", "规划一下",
             "制定计划", "做计划", "方案是什么", "有什么方案",
