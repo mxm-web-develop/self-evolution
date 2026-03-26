@@ -165,15 +165,30 @@ class OnboardingRouter:
         if not projects:
             return "📋 当前没有任何项目。使用 `onboarding.py new` 初始化第一个项目。"
 
+        # 检查项目配置完善度
+        def check_config(project_id: str) -> str:
+            proj_dir = self.index.base_path / "projects" / project_id
+            goals = (proj_dir / "user-goals.md").exists()
+            benchmarks = (proj_dir / "competitor-benchmarks.md").exists()
+            config = (proj_dir / "config.yaml").exists()
+            if goals and benchmarks and config:
+                return "🎯"   # 完整配置
+            elif goals or benchmarks or config:
+                return "🔧"   # 部分配置
+            else:
+                return "⬜"   # 仅有基本扫描
+
         lines = ["📋 项目列表\n"]
         for p in projects:
             marker = "👉" if p["id"] == active_id else "  "
-            status = "✅" if p.get("onboarding_completed") else "⏳"
+            cfg = check_config(p["id"])
             lines.append(
-                f"{marker} {status} [{p['id']}] {p['name']}"
+                f"{marker}{cfg} [{p['id']}] {p['name']}"
                 f"  ({p.get('type', '?')})"
                 f"  phase={p.get('phase', '?')}"
             )
+        lines.append("")
+        lines.append("图例：🎯完整配置  🔧部分配置  ⬜仅有基本扫描")
         return "\n".join(lines)
 
     def _format_help(self) -> str:
