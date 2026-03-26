@@ -518,12 +518,11 @@ class EvolveChatFlow:
         lines = [f"# 📐 方案生成报告：{project_name}", ""]
         diag = results.get("diagnosis")
         if diag:
-            dtype = diag.get('type', 'unknown')
-            type_label = diag.get('type_label', dtype)
-            proj_type_label = diag.get('project_type_label', '未知类型')
-            lines.append(f"**项目类型**：{proj_type_label}")
-            lines.append(f"**诊断类型**：{type_label}")
-            lines.append(f"**优先级**：{diag.get('priority', '?')}/10")
+            maturity = diag.get('maturity_assessment', {})
+            lines.append(f"**项目成熟度**：{maturity.get('label', '未知')}（score={maturity.get('score', '?')}）")
+            lines.append("**优化维度**：")
+            for item in diag.get('optimization_dimensions', [])[:5]:
+                lines.append(f"- {item.get('dimension')}（差距 {item.get('gap_score', '?')}/10）")
             lines.append("")
             lines.append(f"**根因分析**：\n{diag.get('root_cause', '未知')}")
             lines.append("")

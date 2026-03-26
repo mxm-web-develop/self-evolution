@@ -1,10 +1,3 @@
-# core/models.py
-"""
-数据模型定义
-
-所有业务对象使用 @dataclass 定义，支持 JSON 序列化/反序列化
-"""
-
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 from typing import List, Optional, Dict, Any
@@ -12,7 +5,6 @@ from datetime import datetime
 
 
 class Phase(Enum):
-    """项目阶段枚举"""
     IDLE = "idle"
     INVESTIGATING = "investigating"
     DIAGNOSING = "diagnosing"
@@ -25,7 +17,6 @@ class Phase(Enum):
 
 @dataclass
 class ProjectState:
-    """项目状态"""
     project_id: str
     phase: Phase
     created_at: str
@@ -35,7 +26,6 @@ class ProjectState:
     history: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        """转为字典（用于 JSON 序列化）"""
         return {
             "project_id": self.project_id,
             "phase": self.phase.value,
@@ -43,39 +33,36 @@ class ProjectState:
             "updated_at": self.updated_at,
             "current_task": self.current_task,
             "context": self.context,
-            "history": self.history
+            "history": self.history,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "ProjectState":
-        """从字典恢复，只取 dataclass 已知字段，忽略多余字段。"""
-        # 兼容大小写：onboarding 保存 "IDLE"，enum 值是 "idle"
         data = data.copy()
-        phase_str = str(data.get("phase", "idle")).lower()
-        data["phase"] = Phase(phase_str)
-        # 只传 dataclass 已知字段
+        data["phase"] = Phase(str(data.get("phase", "idle")).lower())
         known = {f.name for f in cls.__dataclass_fields__.values()}
         filtered = {k: v for k, v in data.items() if k in known}
         return cls(**filtered)
 
-    def add_history(self, action: str, detail: str = "") -> None:
-        """添加历史记录"""
-        self.history.append({
+    def add_history(self, action: str, detail: str = "", payload: Optional[Dict[str, Any]] = None) -> None:
+        item = {
             "action": action,
             "detail": detail,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M")
-        })
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        }
+        if payload is not None:
+            item["payload"] = payload
+        self.history.append(item)
 
 
 @dataclass
 class Task:
-    """任务单元（用于子代理执行）"""
     task_id: str
     title: str
     description: str
-    task_type: str  # investigation | planning | execution
+    task_type: str
     input_data: Dict[str, Any] = field(default_factory=dict)
-    status: str = "pending"  # pending | running | done | failed
+    status: str = "pending"
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
@@ -89,7 +76,6 @@ class Task:
 
 @dataclass
 class Plan:
-    """方案"""
     plan_id: str
     project_id: str
     title: str
@@ -99,6 +85,8 @@ class Plan:
     resource_estimate: Dict[str, Any]
     risks: List[str]
     expected_outcomes: List[str]
+    target_dimension: Optional[str] = None
+    maturity_assessment: Optional[Dict[str, Any]] = None
     action_items: Optional[List[str]] = None
     scores: Optional[Dict[str, float]] = None
     approved: Optional[bool] = None
@@ -114,7 +102,6 @@ class Plan:
 
 @dataclass
 class Case:
-    """案例（已完成的经验沉淀）"""
     case_id: str
     category: str
     tags: List[str]
@@ -124,7 +111,7 @@ class Case:
     plan_executed: str
     result: str
     lessons: str
-    outcome: str  # success | failure | partial
+    outcome: str
     created_at: str
 
     def to_dict(self) -> dict:

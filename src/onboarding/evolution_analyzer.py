@@ -239,22 +239,15 @@ class EvolutionAnalyzer:
         diag = results.get("diagnosis")
         if diag:
             lines.append("## 🩺 诊断结论\n")
-            dtype = diag.get("type", "unknown")
-            root = diag.get("root_cause", "")
-            priority = diag.get("priority", "?")
+            maturity = diag.get("maturity_assessment", {})
             confidence = diag.get("confidence", 0.0)
-
-            dtype_labels = {
-                "feature_request": "🆕 功能需求",
-                "bug_fix": "🐛 缺陷修复",
-                "optimization": "⚡ 性能/体验优化",
-                "architecture": "🏗️ 架构调整",
-                "unknown": "❓ 待确认"
-            }
-            lines.append(f"**问题类型**：{dtype_labels.get(dtype, dtype)}")
-            lines.append(f"**优先级**：{priority}/10")
+            lines.append(f"**项目成熟度**：{maturity.get('label', '未知')}（score={maturity.get('score', '?')}）")
             lines.append(f"**置信度**：{confidence:.0%}")
-            lines.append(f"**根因分析**：{root}\n")
+            lines.append("**优化维度列表**：")
+            for item in diag.get("optimization_dimensions", [])[:5]:
+                lines.append(f"- {item.get('dimension')}（差距 {item.get('gap_score', '?')}/10）")
+            lines.append("")
+            lines.append(f"**根因分析**：{diag.get('root_cause', '未知')}\n")
 
         # Plans
         plans = results.get("plans")
